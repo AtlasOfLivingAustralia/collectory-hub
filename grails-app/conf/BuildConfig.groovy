@@ -23,26 +23,35 @@ grails.project.dependency.resolution = {
         // uncomment to disable ehcache
         // excludes 'ehcache'
     }
-    log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
+    log "debug" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
-        grailsCentral()
         mavenLocal()
-        mavenCentral()
-        // uncomment the below to enable remote dependency resolution
-        // from public Maven repositories
-        //mavenRepo "http://repository.codehaus.org"
-        //mavenRepo "http://download.java.net/maven/2/"
-        //mavenRepo "http://repository.jboss.com/maven2/"
+        mavenRepo ("http://nexus.ala.org.au/content/groups/public/") {
+            updatePolicy 'always'
+        }
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
-        // runtime 'mysql:mysql-connector-java:5.1.27'
+        compile "commons-httpclient:commons-httpclient:3.1"
     }
 
     plugins {
+        build ":tomcat:7.0.54"
         build(":release:3.0.1",
-              ":rest-client-builder:1.0.3") {
+              ":rest-client-builder:2.1.1") {
             export = false
+        }
+        compile ":cache-ehcache:1.0.0"
+        compile ":cache:1.1.1"
+        compile ":ala-ws-plugin:1.0"
+        runtime ":jquery:1.8.3"
+
+        runtime ':resources:1.2.14'
+        if (Environment.current == Environment.PRODUCTION) {
+            runtime ":zipped-resources:1.0.1"
+            runtime ":cached-resources:1.1"
+            compile ":cache-headers:1.1.7"
+            runtime ":yui-minify-resources:0.1.5"
         }
     }
 }

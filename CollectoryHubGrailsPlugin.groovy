@@ -1,6 +1,8 @@
+import au.org.ala.collectory.ExtendedPluginAwareResourceBundleMessageSource
+
 class CollectoryHubGrailsPlugin {
     // the plugin version
-    def version = "0.1"
+    def version = "0.1-SNAPSHOT"
     // the version or versions of Grails the plugin is designed for
     def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging
@@ -10,10 +12,10 @@ class CollectoryHubGrailsPlugin {
 
     // TODO Fill in these fields
     def title = "Collectory Hub Plugin" // Headline display name of the plugin
-    def author = "Your name"
-    def authorEmail = ""
+    def author = "Temi Varghese"
+    def authorEmail = "temi.varghese@csiro.au"
     def description = '''\
-Brief summary/description of the plugin.
+The plugin extracts some common collectory views. This will make these pages more reusable
 '''
 
     // URL to the plugin's documentation
@@ -41,7 +43,12 @@ Brief summary/description of the plugin.
     }
 
     def doWithSpring = {
-        // TODO Implement runtime spring config (optional)
+        // Custom message source
+        messageSources(ExtendedPluginAwareResourceBundleMessageSource) {
+            basenames = ["WEB-INF/grails-app/i18n/messages","${application.config.biocache.baseUrl}/facets/i18n"] as String[]
+            cacheSeconds = (60 * 60 * 6) // 6 hours
+            useCodeAsDefaultMessage = false
+        }
     }
 
     def doWithDynamicMethods = { ctx ->
