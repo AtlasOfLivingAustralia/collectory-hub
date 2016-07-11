@@ -64,7 +64,6 @@ class DatasetsController {
      * @return
      */
     def showDataResource(){
-        Boolean flag = authService.userInRole("ROLE_BASE")
         String id = params.id
         if(id){
             Map instance = collectoryRestService.getDataResource(id)
