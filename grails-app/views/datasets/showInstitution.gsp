@@ -1,6 +1,6 @@
 <html>
 <head>
-    <g:set var="collectoryService" bean="collectoryService"></g:set>
+    <g:set var="collectoryService" bean="collectoryHubService"></g:set>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <title><ch:pageTitle>${instance.name}</ch:pageTitle></title>

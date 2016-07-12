@@ -19,7 +19,7 @@ import org.apache.commons.httpclient.util.URIUtil
 
 import javax.annotation.PostConstruct
 
-class CollectoryRestService {
+class CollectoryHubRestService {
     def grailsApplication
     WebService webService
 

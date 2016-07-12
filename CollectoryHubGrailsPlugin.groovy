@@ -1,4 +1,5 @@
 import au.org.ala.collectory.ExtendedPluginAwareResourceBundleMessageSource
+import grails.util.Environment
 
 class CollectoryHubGrailsPlugin {
     // the plugin version
@@ -43,6 +44,13 @@ The plugin extracts some common collectory views. This will make these pages mor
     }
 
     def doWithSpring = {
+        def config = application.config
+
+        // Load the "sensible defaults"
+        def loadConfig = new ConfigSlurper(Environment.current.name).parse(application.classLoader.loadClass("CollectoryHubConfig"))
+        application.config = loadConfig.merge(config) // client app will now override the DefaultConfig version
+
+
         // Custom message source
         messageSources(ExtendedPluginAwareResourceBundleMessageSource) {
             basenames = ["WEB-INF/grails-app/i18n/messages","${application.config.biocache.baseUrl}/facets/i18n"] as String[]

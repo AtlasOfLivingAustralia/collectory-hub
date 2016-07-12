@@ -28,7 +28,7 @@
     <script type="text/javascript">
         var altMap = true;
         $(document).ready(function() {
-            $('#nav-tabs > ul').tabs();
+//            $('#nav-tabs > ul').tabs();
             loadResources("${grailsApplication.config.grails.serverURL}","${grailsApplication.config.contextPath}","${grailsApplication.config.grails.serverURL}", '${defaultSource}');
             $('select#per-page').change(onPageSizeChange);
             $('select#sort').change(onSortChange);

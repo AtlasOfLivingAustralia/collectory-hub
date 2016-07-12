@@ -1,21 +1,14 @@
 package au.org.ala.collectory
 
-import au.org.ala.web.AuthService
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 
-import javax.annotation.PostConstruct
-
 class DatasetsController {
-    CollectoryRestService collectoryRestService
+    CollectoryHubRestService collectoryHubRestService
     def grailsApplication
-    AuthService authService
 
-    BootstrapJs bsVersion
-
-    @PostConstruct
-    init(){
-        bsVersion = BootstrapJs.valueOf(grailsApplication.config.bs.version?:"bs2")
+    BootstrapJs getBsVersion(){
+        BootstrapJs.valueOf(grailsApplication.config.bs.version?:"bs2")
     }
 
     /**
@@ -41,7 +34,7 @@ class DatasetsController {
     def resources(){
         List drs;
         String source = params.source?:'hub'
-        drs = collectoryRestService.getDataResources(source)
+        drs = collectoryHubRestService.getDataResources(source)
         render text: drs as JSON, contentType: 'application/json'
     }
 
@@ -54,7 +47,7 @@ class DatasetsController {
     def dataSetSearch (){
         String source = params.source?:'hub'
         String query = params.q?:''
-        List drs = collectoryRestService.getFilteredDataResources(query, source);
+        List drs = collectoryHubRestService.getFilteredDataResources(query, source);
         render drs as JSON
     }
 
@@ -66,7 +59,7 @@ class DatasetsController {
     def showDataResource(){
         String id = params.id
         if(id){
-            Map instance = collectoryRestService.getDataResource(id)
+            Map instance = collectoryHubRestService.getDataResource(id)
             switch (bsVersion){
                 case BootstrapJs.bs2:
                     render view: 'showDataResource', model:[instance: instance]
@@ -88,7 +81,7 @@ class DatasetsController {
     def showInstitution(){
         String id = params.id
         if(id){
-            Map instance = collectoryRestService.getInstitution(id)
+            Map instance = collectoryHubRestService.getInstitution(id)
             switch (bsVersion){
                 case BootstrapJs.bs2:
                     render view: 'showInstitution', model:[instance: instance]

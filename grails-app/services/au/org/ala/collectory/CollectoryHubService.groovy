@@ -1,6 +1,6 @@
 package au.org.ala.collectory
 
-class CollectoryService {
+class CollectoryHubService {
     def isAddressEmpty(address) {
         if(address){
             return [address.street, address.postBox, address.city, address.state, address.postcode, address.country].every {!it}

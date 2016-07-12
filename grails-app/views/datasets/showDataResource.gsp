@@ -1,5 +1,5 @@
 <%@ page import="java.text.DecimalFormat; java.text.SimpleDateFormat" %>
-<g:set var="collectoryService" bean="collectoryService"></g:set>
+<g:set var="collectoryService" bean="collectoryHubService"></g:set>
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
@@ -168,7 +168,7 @@
         </g:if>
         <g:if test="${instance.resourceType == 'records'}">
             <div id="recordsBreakdown" class="section vertical-charts">
-                <g:if test="${!grailsApplication.config.disableOverviewMap}">
+                <g:if test="${!grailsApplication.config.disableOverviewMap.toBoolean()}">
                     <h3><g:message code="public.sdr.content.label10" /></h3>
                     <ch:recordsMapDirect uid="${instance.uid}"/>
                 </g:if>
@@ -356,7 +356,7 @@
 
       // species pages
       $.ajax({
-          url: bieUrl + "search.json?q=*&fq=uid:${instance.uid}",
+          url: bieUrl + "/search.json?q=*&fq=uid:${instance.uid}",
           dataType: 'jsonp',
           success: function(data) {
               var pages = data.searchResults.totalRecords;
@@ -364,11 +364,11 @@
                   var $contrib = $('#pagesContributed');
                   $contrib.append($('<h2>Contribution to the Atlas</h2><p>This resource has contributed to <strong>' +
                       pages + '</strong> pages of taxa. ' +
-                      '<a href="' + bieUrl + 'search?q=*&fq=uid:' + "${instance.uid}" + '">View a list</a></p>'));
+                      '<a href="' + bieUrl + '/search?q=*&fq=uid:' + "${instance.uid}" + '">View a list</a></p>'));
               }
           }
       });
-
+debugger;
       // records
       if (${instance.resourceType == 'records'}) {
           // summary biocache data

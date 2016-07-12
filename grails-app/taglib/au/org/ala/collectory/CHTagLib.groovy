@@ -1,13 +1,13 @@
 package au.org.ala.collectory
 
 import grails.converters.JSON
-import org.codehaus.groovy.grails.commons.ConfigurationHolder
 
 import java.text.SimpleDateFormat
 
 class CHTagLib {
 
     static namespace = "ch"
+    def grailsApplication
 
     /**
      * Outputs value/body if one is not blank otherwise outputs the otherwise value if present.
@@ -400,7 +400,7 @@ class CHTagLib {
                     " <img id='recordsMap' class='no-radius' src='${urlBase}map${query}' width='340' />" +
                     " <img id='mapLegend' src='${urlBase}legend${query}' width='128' />" +
                     "</div>" +
-                    "<div class='learnMaps'><span class='asterisk-container'><a href='${ConfigurationHolder.config.ala.baseURL}/faq/species-data/errors-in-maps/'>Learn more about Atlas maps</a>&nbsp;</span></div>"
+                    "<div class='learnMaps'><span class='asterisk-container'><a href='${grailsApplication.config.ala.baseURL}/faq/species-data/errors-in-maps/'>Learn more about Atlas maps</a>&nbsp;</span></div>"
         }
         else {
             out <<
@@ -408,7 +408,18 @@ class CHTagLib {
                     " <img id='recordsMap' class='no-radius' src='${resource(dir:'images/map',file:'mapping-data-not-available.png')}' width='340' />" +
                     " <img id='mapLegend' src='${resource(dir:'images/ala', file:'legend-not-available.png')}' width='128' />" +
                     "</div>" +
-                    "<div class='learnMaps'><span class='asterisk-container'><a href='${ConfigurationHolder.config.ala.baseURL}/faq/species-data/errors-in-maps/'>Learn more about Atlas maps</a>&nbsp;</span></div>"
+                    "<div class='learnMaps'><span class='asterisk-container'><a href='${grailsApplication.config.ala.baseURL}/faq/species-data/errors-in-maps/'>Learn more about Atlas maps</a>&nbsp;</span></div>"
+        }
+    }
+
+    private String fieldNameForSearch(uid) {
+        switch (uid[0..1]) {
+            case 'co': return 'collection_uid'; break
+            case 'in': return 'institution_uid'; break
+            case 'dr': return 'data_resource_uid'; break
+            case 'dp': return 'data_provider_uid'; break
+            case 'dh': return 'data_hub_uid'; break
+            default: return ""
         }
     }
 }
