@@ -34,15 +34,21 @@ loggerURL="http://logger.ala.org.au/service"
 
 speciesListToolUrl="http://lists.ala.org.au/speciesListItem/list/"
 
-skin.layout = 'main-bs2'
+skin.appName = "Collectory hub"
+skin.layout = "main-bs2"
 skin.orgNameLong="Atlas of Living Australia"
 skin.orgNameShort = "ALA"
 skin.fluidLayout = false
-bs.version="bs2"
+bs.version="bs3"
 
 // Disable UI components
 disableOverviewMap="true"
 disableAlertLinks="true"
 disableLoggerLinks="false"
 
+adminRole = "ROLE_ADMIN"
 ala.baseURL ="http://www.ala.org.au"
+
+sandboxHubsWebapp = "/generic-hub"
+
+sandbox.hideCharts = "true"

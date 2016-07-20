@@ -15,10 +15,13 @@
  * Created by Temi on 6/07/2016.
  */
 modules = {
-    collectory {
-        dependsOn 'jquery', 'jquery_i18n', 'jquery_json', 'jquery_tools', 'jquery_jsonp', 'bootstrap2'
-        resource url: 'js/collectory.js'
+    commonStyles{
         resource url: 'css/temp-style.css'
+    }
+
+    collectory {
+        dependsOn 'commonStyles', 'jquery', 'jquery_i18n', 'jquery_json', 'jquery_tools', 'jquery_jsonp', 'bootstrap2'
+        resource url: 'js/collectory.js'
     }
 
     bootstrap2 {

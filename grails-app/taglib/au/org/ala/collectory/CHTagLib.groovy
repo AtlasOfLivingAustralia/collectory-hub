@@ -1,6 +1,9 @@
 package au.org.ala.collectory
 
 import grails.converters.JSON
+import org.apache.commons.lang.StringUtils
+import org.ocpsoft.prettytime.PrettyTime
+import org.springframework.web.servlet.support.RequestContextUtils
 
 import java.text.SimpleDateFormat
 
@@ -346,7 +349,7 @@ class CHTagLib {
             attrs.institutions.each{ institution ->
                 switch (institution.uid[0..1]) {
                     case 'in':
-                        String href = createLink(controller: 'datasets', action: 'showInstitution') + "/${institution.uid}"
+                        String href = createLink(controller: 'collectory', action: 'showInstitution') + "/${institution.uid}"
                         out << "<a href='${href}'>${institution.name}</a>";
                         break
                 }
@@ -421,5 +424,31 @@ class CHTagLib {
             case 'dh': return 'data_hub_uid'; break
             default: return ""
         }
+    }
+
+    def display = {attrs, body ->
+
+        def date = attrs.remove('date')
+        def showTime = Boolean.valueOf(attrs.remove('showTime'))
+        def capitalize = Boolean.valueOf(attrs.remove('capitalize'))
+
+        if ('org.joda.time.DateTime'.equals(date?.class?.name)) {
+            date = date.toDate()
+        }
+
+        if (!date) return
+
+        def prettyTime = new PrettyTime(RequestContextUtils.getLocale(request))
+
+
+        String result = prettyTime.format(date).trim()
+        if (capitalize) result = StringUtils.capitalize(result)
+        if (showTime) {
+            def format = attrs.remove('format') ?:
+                    message(code: 'default.date.format', default: 'hh:mm:ss a')
+            result += ', ' + date.format(format)
+        }
+
+        out << result
     }
 }

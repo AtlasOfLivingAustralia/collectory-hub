@@ -280,3 +280,7 @@ ul.facets {
 }
 
 #adminNavMenu { margin-top:10px; }
+
+.table.table-borderless tbody tr td, .table.table-borderless tbody tr th, .table.table-borderless thead tr th {
+    border: none;
+}

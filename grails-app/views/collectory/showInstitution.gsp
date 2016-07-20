@@ -78,7 +78,7 @@
                     <h2><g:message code="public.si.content.label05" /></h2>
                     <ol>
                         <g:each var="c" in="${instance.linkedRecordProviders.sort { it.name }}">
-                            <li><g:link controller="datasets" action="showDataResource"
+                            <li><g:link controller="collectory" action="showDataResource"
                                         id="${c.uid}">${c?.name}</g:link></li>
                         </g:each>
                     </ol>

@@ -42,7 +42,7 @@ grails.project.dependency.resolution = {
             export = false
         }
         compile ":cache-ehcache:1.0.0"
-        compile ":cache:1.1.1"
+        compile ":cache:1.1.8"
         compile ":ala-ws-plugin:1.0"
         compile ":jquery:1.11.1"
 

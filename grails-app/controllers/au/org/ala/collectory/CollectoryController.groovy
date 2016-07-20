@@ -3,12 +3,12 @@ package au.org.ala.collectory
 import grails.converters.JSON
 import org.apache.http.HttpStatus
 
-class DatasetsController {
+class CollectoryController {
     CollectoryHubRestService collectoryHubRestService
     def grailsApplication
 
-    BootstrapJs getBsVersion(){
-        BootstrapJs.valueOf(grailsApplication.config.bs.version?:"bs2")
+    BootstrapJs getBsVersion() {
+        BootstrapJs.valueOf(grailsApplication.config.bs.version ?: "bs2")
     }
 
     /**
@@ -16,7 +16,7 @@ class DatasetsController {
      * @return
      */
     def list() {
-        switch (bsVersion){
+        switch (bsVersion) {
             case BootstrapJs.bs2:
                 render view: 'list'
                 break
@@ -31,9 +31,9 @@ class DatasetsController {
      * @params source - hub or all
      * @return
      */
-    def resources(){
+    def resources() {
         List drs;
-        String source = params.source?:'hub'
+        String source = params.source ?: 'hub'
         drs = collectoryHubRestService.getDataResources(source)
         render text: drs as JSON, contentType: 'application/json'
     }
@@ -44,9 +44,9 @@ class DatasetsController {
      * @params - source - hub or all
      * @return ['dr1','dr2']
      */
-    def dataSetSearch (){
-        String source = params.source?:'hub'
-        String query = params.q?:''
+    def dataSetSearch() {
+        String source = params.source ?: 'hub'
+        String query = params.q ?: ''
         List drs = collectoryHubRestService.getFilteredDataResources(query, source);
         render drs as JSON
     }
@@ -56,13 +56,13 @@ class DatasetsController {
      * @params id - data resource id
      * @return
      */
-    def showDataResource(){
+    def showDataResource() {
         String id = params.id
-        if(id){
+        if (id) {
             Map instance = collectoryHubRestService.getDataResource(id)
-            switch (bsVersion){
+            switch (bsVersion) {
                 case BootstrapJs.bs2:
-                    render view: 'showDataResource', model:[instance: instance]
+                    render view: 'showDataResource', model: [instance: instance]
                     break;
                 case BootstrapJs.bs3:
                     render text: "The system does not have a bootstrap 3 version of the requested page"
@@ -78,13 +78,13 @@ class DatasetsController {
      * @params id - institution id
      * @return
      */
-    def showInstitution(){
+    def showInstitution() {
         String id = params.id
-        if(id){
+        if (id) {
             Map instance = collectoryHubRestService.getInstitution(id)
-            switch (bsVersion){
+            switch (bsVersion) {
                 case BootstrapJs.bs2:
-                    render view: 'showInstitution', model:[instance: instance]
+                    render view: 'showInstitution', model: [instance: instance]
                     break;
                 case BootstrapJs.bs3:
                     render text: "The system does not have a bootstrap 3 version of the requested page"
