@@ -46,6 +46,7 @@ grails.project.dependency.resolution = {
         compile ":ala-ws-plugin:1.0"
         compile ":jquery:1.11.1"
 
+        runtime ":pretty-time:2.1.3.Final-1.0.1"
         runtime ':resources:1.2.14'
         if (Environment.current == Environment.PRODUCTION) {
             runtime ":zipped-resources:1.0.1"
