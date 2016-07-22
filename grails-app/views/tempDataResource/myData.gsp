@@ -9,11 +9,6 @@
 <body>
 <div class="panel panel-default">
     <div class="panel-heading">
-        <div class="well pull-right col-sm-3">
-            <strong>Tip:</strong> To share your list of datasets with other users, use
-        <g:link controller="myDatasets" action="userDatasets" params="${[userId: currentUserId]}">this link</g:link>.
-        </div>
-
         <h1>${grailsApplication.config.skin.appName} - My uploaded datasets</h1>
     </div>
 
@@ -36,6 +31,11 @@
                 Here is a listing of your previously uploaded datasets.<br/>
             </p>
 
+            <div class="row">
+                <div class="col-sm-12">
+                    <a class="btn btn-primary pull-right" onclick="window.location = '${createLink(uri:'/')}'">Add new</a>
+                </div>
+            </div>
             <div class="row">
                 <div class="col-sm-12">
                     <table class="table">

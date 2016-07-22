@@ -24,8 +24,9 @@ class TempDataResourceController {
             Map tempDataResource = collectoryHubRestService.getTempDataResourceFromCollectory(params.uid)
             params.isOwner = alaId == tempDataResource.alaId
             params.canEdit = params.canView = params.isOwner || params.isAdmin
+            params.canSubmitForReview = tempDataResource.status == 'draft'
             params.canDecline = params.canLoadToProduction = tempDataResource.status == 'submitted'
-            if(tempDataResource.status == 'submitted') {
+            if(tempDataResource.status in ['submitted', 'queuedForLoading']) {
                 params.canEdit = false
             }
         }
@@ -122,6 +123,8 @@ class TempDataResourceController {
                     metadata.isAdmin = params.isAdmin
                     metadata.canDecline = params.canDecline
                     metadata.canLoadToProduction = params.canLoadToProduction
+                    metadata.canSubmitForReview = params.canSubmitForReview
+                    metadata.index = metadata.numberOfRecords <= 200000
 
                     switch (bsVersion) {
                         case BootstrapJs.bs2:
@@ -204,23 +207,28 @@ class TempDataResourceController {
      * @return
      */
     def submitDataForReview(){
-        if(params.isOwner && params.uid){
-            Map result = collectoryHubRestService.submitTempDataResourceForReview(params.uid)
-            // check if webservice executed successfully
-            if(result?.isValid){
-                if (result?.status == 200 || result?.status == 201) {
-                    flash.message = "Successfully submitted data resource for review!"
-                    redirect(action: 'viewMetadata', params: [uid: params.uid])
-                } else {
-                    flash.message = 'An error occurred when saving this data.'
-                    redirect action: 'myData'
+        if(params.canSubmitForReview){
+            if(params.isOwner && params.uid){
+                Map result = collectoryHubRestService.submitTempDataResourceForReview(params.uid)
+                // check if webservice executed successfully
+                if(result?.isValid){
+                    if (result?.status == 200 || result?.status == 201) {
+                        flash.message = "Successfully submitted data resource for review!"
+                        redirect(action: 'viewMetadata', params: [uid: params.uid])
+                    } else {
+                        flash.message = 'An error occurred when saving this data.'
+                        redirect action: 'myData'
+                    }
+                } else  {
+                    flash.message = result.message
+                    redirect action: 'editMetadata', params: [uid: params.uid]
                 }
-            } else  {
-                flash.message = result.message
-                redirect action: 'editMetadata', params: [uid: params.uid]
+            } else {
+                flash.message = "Only owners can submit data resource for review."
+                redirect action: 'myData'
             }
         } else {
-            flash.message = "Only owners can submit data resource for review."
+            flash.message = "Only draft data resource can be submitted for review."
             redirect action: 'myData'
         }
     }
@@ -236,7 +244,8 @@ class TempDataResourceController {
     def delete(){
         if(params.uid) {
             if (params.canEdit) {
-                redirect uri: "${grailsApplication.config.grails.serverURL}/myDatasets/deleteResource?uid=${params.uid}"
+//                collectoryHubRestService.deleteTempDataResource(params.uid)
+                redirect uri: "${grailsApplication.config.grails.serverURL}/api/myDatasets/deleteResource?uid=${params.uid}"
             } else {
                 flash.message = 'Cannot delete since you cannot edit this data resource.'
                 redirect action: 'myData'
@@ -259,7 +268,7 @@ class TempDataResourceController {
         if(params.uid){
             if(params.canEdit){
                 collectoryHubRestService.draftTempDataResource(params.uid)
-                redirect uri: "${grailsApplication.config.grails.serverURL}/upload/reload?dataResourceUid=${params.uid}"
+                redirect uri: "${grailsApplication.config.grails.serverURL}/dataCheck?reload=${params.uid}"
             } else {
                 flash.message = 'Cannot reload since you cannot edit this data resource.'
                 redirect action: 'myData'
@@ -309,8 +318,13 @@ class TempDataResourceController {
         try {
             if(params.canLoadToProduction) {
                 if(params.uid){
-                    collectoryHubRestService.loadToProduction(params.uid)
-                    flash.message = "Successfully loaded to production!"
+                    Boolean index = params.process in ['index']
+                    Map result = collectoryHubRestService.loadToProduction(params.uid, index)
+                    if(result.error){
+                        flash.message = result.message
+                    } else {
+                        flash.message = "Successfully loaded to production!"
+                    }
                     redirect(action: 'viewMetadata', params: [uid: params.uid])
                 } else {
                     flash.message = "Uid must be provided"

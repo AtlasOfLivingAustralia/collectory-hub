@@ -83,7 +83,11 @@
         </tr>
         <tr>
             <td class="text-right"><b>License</b></td>
-            <td>${license}</td>
+            <td>
+                <g:if test="${license}">
+                    <g:message code="tempDateResource.license.${license}"></g:message>
+                </g:if>
+            </td>
         </tr>
         <tr>
             <td class="text-right"><b>Citation</b></td>
@@ -123,45 +127,72 @@
                 <p>Data actions</p>
                 <button class="btn btn-default" onclick="window.location = '${sandboxLink}'">View records</button>
                 <g:if test="${reloadLink && canEdit}">
-                    <button type="submit" class="btn btn-default" onclick="window.location = '${reloadLink}'">Reload data</button>
+                    <button type="submit" class="btn btn-default"
+                            onclick="window.location = '${reloadLink}'">Reload data</button>
                 </g:if>
                 <g:if test="${deleteLink && canEdit}">
-                    <button type="submit" class="btn btn-default btn-danger" onclick="window.location = '${deleteLink}'">Delete</button>
+                    <button type="submit" class="btn btn-default btn-danger"
+                            onclick="window.location = '${deleteLink}'">Delete</button>
                 </g:if>
             </div>
         </div>
-        <g:if test="${canEdit}">
-            <br>
-            <div class="row">
-                <div class="col-sm-12">
-                    <p>Do you want this data to be shared on the Atlas of Living Australia?</p>
-                    <button type="submit" class="btn btn-default"
-                            onclick="window.location =
-                            '${createLink(controller: 'tempDataResource', action: 'submitDataForReview', params: [uid: uid])}'">
-                        Submit for review
-                    </button>
-                </div>
+        <br>
+
+        <div class="row">
+            <div class="col-sm-12">
+                <p>Do you want this data to be shared on the Atlas of Living Australia?</p>
+                <button type="submit" class="btn btn-default" ${canSubmitForReview ?: 'disabled'}
+                        onclick="window.location =
+                                '${createLink(controller: 'tempDataResource', action: 'submitDataForReview', params: [uid: uid])}'">
+                    Submit for review
+                </button>
             </div>
-        </g:if>
+        </div>
         <g:if test="${isAdmin}">
             <br>
+
             <div class="row">
                 <div class="col-sm-12">
                     <p>Admin actions</p>
-                    <button class="btn btn-default" ${canDecline?:'disabled'}
-                            onclick="window.location =
-                            '${createLink(controller: 'tempDataResource', action: 'decline', params: [uid: uid])}'">
-                        Decline
-                    </button>
+                </div>
+            </div>
 
-                    <button type="submit"  ${canLoadToProduction?:'disabled'} class="btn btn-default btn-danger"
+            <div class="row">
+                <div class="col-sm-2">
+                    <button class="btn btn-default" ${canDecline ?: 'disabled'}
                             onclick="window.location =
-                                    '${createLink(controller: 'tempDataResource', action: 'loadToProduction',
-                                     params: [uid: uid])}'">
-                        Publish on production
+                                    '${createLink(controller: 'tempDataResource', action: 'decline', params: [uid: uid])}'">
+                        Decline
                     </button>
                 </div>
             </div>
+            <br>
+
+            <form method="post"
+                  action="${createLink(controller: 'tempDataResource', action: 'loadToProduction', params: [uid: uid])}" ${canLoadToProduction ?: 'disabled'}>
+                <div class="row">
+                    <div class="col-sm-3" style="border-left: 1px">
+                        <div class="input-group">
+                            <span class="">
+                                <input type="radio" aria-label="Index records" name="process" value="index" required ${canDecline ?: 'disabled'} ${index?'checked':''}>
+                                <label>Index records</label>
+                            </span>
+                        </div><!-- /input-group -->
+                        <div class="input-group">
+                            <span class="">
+                                <input type="radio" aria-label="Index records" name="process" value="excludeindex" ${index?'':'checked'}
+                                       required ${canDecline ?: 'disabled'}>
+                                <label>Do not index records</label>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                    <div class="col-sm-2">
+                        <button type="submit"  class="btn btn-default btn-danger" ${canDecline ?: 'disabled'}>
+                            Publish on production
+                        </button>
+                    </div>
+                </div>
+            </form>
         </g:if>
     </div>
 </div>

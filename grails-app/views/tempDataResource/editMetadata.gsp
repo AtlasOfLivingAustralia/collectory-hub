@@ -110,11 +110,17 @@
                 <label for="license" class="col-sm-2 control-label">License:</label>
                 <div class="col-sm-10">
                     <select type="text" class="form-control" id="license" name="license" value="${license}">
-                        <option>CC-BY</option>
-                        <option>CC-BY-NC</option>
-                        <option>CC-0 3.0 Australia</option>
-                        <option>CC-0 4.0 International</option>
+                        <option value="CCBY3Aus"><g:message code="tempDateResource.license.CCBY3Aus"></g:message></option>
+                        <option value="CCBYNC3Aus"><g:message code="tempDateResource.license.CCBYNC3Aus"></g:message></option>
+                        <option value="CCBY4Int"><g:message code="tempDateResource.license.CCBY4Int"></g:message></option>
+                        <option value="CCBYNC4Int"><g:message code="tempDateResource.license.CCBYNC4Int"></g:message></option>
+                        <option value="CC0"><g:message code="tempDateResource.license.CC0"></g:message></option>
                     </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="col-sm-offset-2 col-sm-10">
+                    <a href="<g:message code="tempDataResource.license.link"></g:message>" target="_blank"><g:message code="tempDataResource.license.helptext"></g:message></a>
                 </div>
             </div>
             <div class="form-group">
