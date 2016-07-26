@@ -131,8 +131,9 @@
                             onclick="window.location = '${reloadLink}'">Reload data</button>
                 </g:if>
                 <g:if test="${deleteLink && canEdit}">
-                    <button type="submit" class="btn btn-default btn-danger"
-                            onclick="window.location = '${deleteLink}'">Delete</button>
+                    <form method="POST"  action="${deleteLink}" class="form-inline-block">
+                        <button type="submit" class="btn btn-default btn-danger">Delete</button>
+                    </form>
                 </g:if>
             </div>
         </div>
@@ -158,41 +159,56 @@
             </div>
 
             <div class="row">
-                <div class="col-sm-2">
+                <div class="col-sm-6">
                     <button class="btn btn-default" ${canDecline ?: 'disabled'}
                             onclick="window.location =
                                     '${createLink(controller: 'tempDataResource', action: 'decline', params: [uid: uid])}'">
                         Decline
                     </button>
+                    <button class="btn btn-default" ${canReset ?: 'disabled'}
+                            onclick="window.location =
+                                    '${createLink(controller: 'tempDataResource', action: 'resetStatus', params: [uid: uid])}'">
+                        Reset status
+                    </button>
+                    <button class="btn btn-default" ${canCreateDataResource ?: 'disabled'}
+                            onclick="window.location =
+                                    '${createLink(controller: 'tempDataResource', action: 'createDr', params: [uid: uid])}'">
+                        Create or update data resource
+                    </button>
+                    <button class="btn btn-default" ${canTestRun ?: 'disabled'}
+                            onclick="window.location =
+                                    '${createLink(controller: 'tempDataResource', action: 'testRun', params: [uid: uid])}'">
+                        Test run
+                    </button>
                 </div>
             </div>
             <br>
-
+            <div class="row">
             <form method="post"
-                  action="${createLink(controller: 'tempDataResource', action: 'loadToProduction', params: [uid: uid])}" ${canLoadToProduction ?: 'disabled'}>
-                <div class="row">
+                  action="${createLink(controller: 'tempDataResource', action: 'loadToProduction', params: [uid: uid])}">
+
                     <div class="col-sm-3" style="border-left: 1px">
                         <div class="input-group">
                             <span class="">
-                                <input type="radio" aria-label="Index records" name="process" value="index" required ${canDecline ?: 'disabled'} ${index?'checked':''}>
+                                <input type="radio" aria-label="Index records" name="process" value="index" required ${canLoadToProduction ?: 'disabled'} ${index?'checked':''}>
                                 <label>Index records</label>
                             </span>
                         </div><!-- /input-group -->
                         <div class="input-group">
                             <span class="">
                                 <input type="radio" aria-label="Index records" name="process" value="excludeindex" ${index?'':'checked'}
-                                       required ${canDecline ?: 'disabled'}>
+                                       required ${canLoadToProduction ?: 'disabled'}>
                                 <label>Do not index records</label>
                             </span>
                         </div><!-- /input-group -->
                     </div>
                     <div class="col-sm-2">
-                        <button type="submit"  class="btn btn-default btn-danger" ${canDecline ?: 'disabled'}>
+                        <button type="submit"  class="btn btn-default btn-danger" ${canLoadToProduction ?: 'disabled'}>
                             Publish on production
                         </button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </g:if>
     </div>
 </div>

@@ -1,6 +1,20 @@
 package au.org.ala.collectory
 
+import au.org.ala.web.AuthService
+import grails.converters.JSON
+import org.apache.commons.httpclient.HttpClient
+import org.apache.commons.httpclient.methods.DeleteMethod
+import org.apache.commons.httpclient.methods.GetMethod
+import org.apache.commons.httpclient.methods.HeadMethod
+import org.apache.commons.httpclient.methods.PostMethod
+
 class CollectoryHubService {
+    def grailsApplication
+    AuthService authService
+
+    static final String DEFAULT_API_KEY_HEADER = "api_key"
+    static final String USER_HEADER = "user"
+
     def isAddressEmpty(address) {
         if(address){
             return [address.street, address.postBox, address.city, address.state, address.postcode, address.country].every {!it}
@@ -75,5 +89,81 @@ class CollectoryHubService {
             }
         }
         return uids
+    }
+
+    /**
+     * Do a post with JSON body
+     * @param url
+     * @param body - JSON string
+     * @return
+     */
+    Map doPost(String url, String body){
+        PostMethod post = new PostMethod(url);
+        post.setRequestHeader("Authorization", grailsApplication.config.webservice.apiKey);
+        post.setRequestBody(body);
+        HttpClient httpClient = new HttpClient();
+        int statusCode = httpClient.executeMethod(post);
+        [status: statusCode, location: post.getResponseHeader('location')?.value, resp: post.responseBodyAsString]
+    }
+
+    /**
+     * Post to a url with Map as the body parameter. This function adds authorization information to post body.
+     * @param url
+     * @param body
+     * @return
+     */
+    Map doPost(String url, Map body){
+        addAuthorisationFields(body)
+        String json = (body as JSON).toString()
+        doPost(url, json)
+    }
+
+    /**
+     * add api key and user email for authorisation and audit activities in collectory
+     * @param body
+     */
+    public void addAuthorisationFields(Map body) {
+        body[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
+        body[USER_HEADER] = authService.getEmail()
+        body
+    }
+
+    /**
+     * This function does a http HEAD call on the given url.
+     * @param url
+     * @return
+     */
+    public Map doHead(String url) {
+        HeadMethod head = new HeadMethod(url);
+        HttpClient httpClient = new HttpClient();
+        int statusCode = httpClient.executeMethod(head);
+        [status: statusCode]
+    }
+
+    /**
+     * This function does a http HEAD call on the given url.
+     * @param url
+     * @return
+     */
+    public int doDelete(String url) {
+        DeleteMethod delete = new DeleteMethod(url);
+        HttpClient httpClient = new HttpClient();
+        httpClient.executeMethod(delete);
+    }
+
+    /**
+     * Do a get request. This method returns headers as well.
+     * @param url
+     * @return
+     */
+    public Map doGet(String url){
+        Map result = [:]
+        GetMethod get = new GetMethod(url);
+        HttpClient httpClient = new HttpClient();
+        result.status = httpClient.executeMethod(get);
+        result.headers = get.getResponseHeaders()
+        result.resp = get.responseBodyAsString
+
+        result
     }
 }

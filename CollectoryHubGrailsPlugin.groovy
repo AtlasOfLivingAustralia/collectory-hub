@@ -8,7 +8,6 @@ class CollectoryHubGrailsPlugin {
     def grailsVersion = "2.3 > *"
     // resources that are excluded from plugin packaging
     def pluginExcludes = [
-        "grails-app/views/error.gsp"
     ]
 
     def title = "Collectory Hub Plugin" // Headline display name of the plugin
@@ -29,6 +28,28 @@ class CollectoryHubGrailsPlugin {
             basenames = ["WEB-INF/grails-app/i18n/messages","${application.config.biocache.baseUrl}/facets/i18n"] as String[]
             cacheSeconds = (60 * 60 * 6) // 6 hours
             useCodeAsDefaultMessage = false
+        }
+
+        // EhCache settings
+        if (!config.grails.cache.config) {
+            config.grails.cache.config = {
+                defaults {1
+                    eternal false
+                    overflowToDisk false
+                    maxElementsInMemory 10000
+                    timeToLiveSeconds 3600
+                }
+
+                cache {
+                    name 'collectoryCache'
+                    timeToLiveSeconds (3600 * 4)
+                }
+
+                cache {
+                    name 'longTermCache'
+                    timeToLiveSeconds (3600 * 24)
+                }
+            }
         }
     }
 }

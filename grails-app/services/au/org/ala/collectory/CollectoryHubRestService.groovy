@@ -17,14 +17,10 @@ import au.org.ala.web.AuthService
 import au.org.ala.web.UserDetails
 import au.org.ala.ws.service.WebService
 import grails.converters.JSON
+import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.Cacheable
 import groovy.json.JsonSlurper
-import org.apache.commons.httpclient.HttpClient
-import org.apache.commons.httpclient.methods.DeleteMethod
-import org.apache.commons.httpclient.methods.HeadMethod
-import org.apache.commons.httpclient.methods.PostMethod
 import org.apache.commons.httpclient.util.URIUtil
-import org.springframework.context.MessageSource
 
 import javax.annotation.PostConstruct
 import java.text.SimpleDateFormat
@@ -33,8 +29,8 @@ class CollectoryHubRestService {
     def grailsApplication
     WebService webService
     AuthService authService
-    MessageSource messageSource
     CollectoryHubJenkinsService collectoryHubJenkinsService
+    CollectoryHubService collectoryHubService
 
     static final String DEFAULT_API_KEY_HEADER = "api_key"
     static final String USER_HEADER = "user"
@@ -176,14 +172,9 @@ class CollectoryHubRestService {
      * @return JSON list of data resources
      */
     def getUserUploads(String currentUserId){
-        try {
-            def url = "${grailsApplication.config.collectoryUrl}/tempDataResource?alaId=${currentUserId}"
-            def js = new JsonSlurper()
-            js.parseText(new URL(url).text)
-        } catch (Exception e){
-            log.error(e.getMessage(), e)
-            null
-        }
+        def url = "${grailsApplication.config.collectoryUrl}/tempDataResource?alaId=${currentUserId}"
+        def js = new JsonSlurper()
+        js.parseText(new URL(url).text)
     }
 
     /**
@@ -191,8 +182,9 @@ class CollectoryHubRestService {
      * @param uid - drt1
      * @return {@link Map}
      */
+    @Cacheable(value = "collectoryCache", key = "#uid")
     Map getTempDataResource(String uid){
-        Map tempMeta = getTempDataResourceFromCollectory(uid)
+        Map tempMeta = grailsApplication.mainContext.collectoryHubRestService.getTempDataResourceFromCollectory(uid)
         if(tempMeta && tempMeta.size()){
             tempMeta = cleanTempDateResource(tempMeta)
             preFillSystemDetails(tempMeta)
@@ -221,16 +213,16 @@ class CollectoryHubRestService {
         String userId = tempMeta.alaId
         if(userId){
             UserDetails user = authService.getUserForUserId(userId, true)
-            tempMeta.displayName = user.displayName?:user.userName?:user.userId
+            tempMeta.displayName = user?.displayName?:user?.userName?:user?.userId
             tempMeta.sourceFile = ""
         }
 
         // only add these links if plugin is used in sandbox environment.
         if(grailsApplication.config.sandboxHubsWebapp){
             tempMeta.sandboxLink = "${grailsApplication.config.sandboxHubsWebapp}/occurrences/search?q=data_resource_uid:${tempMeta.uid}"
-            tempMeta.sourceFileUrl = "${grailsApplication.config.grails.serverURL}/api/dataCheck/serveFile?uid=${tempMeta.uid}"
-            tempMeta.reloadLink = "${grailsApplication.config.grails.serverURL}/api/tempDataResource/reload?uid=${tempMeta.uid}"
-            tempMeta.deleteLink = "${grailsApplication.config.grails.serverURL}/api/tempDataResource/delete?uid=${tempMeta.uid}"
+            tempMeta.sourceFileUrl = "${grailsApplication.config.grails.serverURL}/dataCheck/serveFile?uid=${tempMeta.uid}"
+            tempMeta.reloadLink = "${grailsApplication.config.grails.serverURL}/tempDataResource/reload?uid=${tempMeta.uid}"
+            tempMeta.deleteLink = "${grailsApplication.config.grails.serverURL}/datasets/deleteResource?uid=${tempMeta.uid}"
             if(tempMeta.prodUid){
                 tempMeta.collectoryLink = "${grailsApplication.config.collectory.baseUrl}/public/show/${tempMeta.prodUid}"
             }
@@ -250,10 +242,14 @@ class CollectoryHubRestService {
         sdf.format(date);
     }
 
+    /**
+     * Make properties more human friendly
+     * @param tempMeta - drt map
+     * @return
+     */
     Map cleanTempDateResource(Map tempMeta){
         tempMeta.dateCreated = getDateAndTimeFromTimeStamp( tempMeta.dateCreated )
         tempMeta.lastUpdated = getDateAndTimeFromTimeStamp( tempMeta.lastUpdated )
-        tempMeta.status = tempMeta.status?:'draft'
         tempMeta
     }
 
@@ -262,24 +258,17 @@ class CollectoryHubRestService {
      * @params uid - required - temp data resource id
      * @params All temp data resource related properties - check au.org.ala.collectory.TempDataResource in Collectory Plugin.
      */
-    Map saveTempDateResource(Map data){
-        if(data.uid){
-            String url = "${grailsApplication.config.collectoryUrl}/tempDataResource/${data.uid}"
+    @CacheEvict(value="collectoryCache", key= "#uid", beforeInvocation = true)
+    Map saveTempDataResource(Map data, String uid){
+        if(uid){
+            String url = "${grailsApplication.config.collectoryUrl}/tempDataResource/${uid}"
             data[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
+            data.sourceFile = "${grailsApplication.config.grails.serverURL}/dataCheck/serveFile?uid=${uid}"
             data.remove('controller')
             data.remove('action')
             String body = (data as JSON).toString()
-            doPost(url, body)
+            collectoryHubService.doPost(url, body)
         }
-    }
-
-    Map doPost(String url, String body){
-        PostMethod post = new PostMethod(url);
-        post.setRequestHeader("Authorization", grailsApplication.config.webservice.apiKey);
-        post.setRequestBody(body);
-        HttpClient httpClient = new HttpClient();
-        int statusCode = httpClient.executeMethod(post);
-        [status: statusCode, location: post.getResponseHeader('location')?.value]
     }
 
     /**
@@ -300,16 +289,20 @@ class CollectoryHubRestService {
     }
 
     /**
-     *
+     * Submit a user uploaded dataset for review.
      * @param uid
      * @return
      */
     Map submitTempDataResourceForReview(String uid){
-        Map drt = getTempDataResourceFromCollectory(uid)
+        Map drt = grailsApplication.mainContext.collectoryHubRestService.getTempDataResource(uid)
         Map result = checkIfMandatoryFieldsAreFilled(drt)
         Map saveResult
         if(result?.isValid){
-            saveResult = saveTempDateResource([status: 'submitted', uid: uid])
+            // update contact details
+            Integer contactId = getOrCreateContact(authService.getEmail(), authService.userId)
+            createOrUpdateContactForEntity('tempDataResource', uid, contactId)
+
+            saveResult = grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([status: 'submitted'], uid)
             saveResult.isValid = true
             return saveResult
         }
@@ -345,7 +338,7 @@ class CollectoryHubRestService {
      * @return
      */
     Map declineTempDataResource(String uid){
-        saveTempDateResource([status: 'declined', uid: uid])
+        grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([status: 'declined'], uid)
     }
 
     /**
@@ -354,9 +347,9 @@ class CollectoryHubRestService {
      * @return
      */
     Map draftTempDataResource(String uid){
-        Map drt = getTempDataResourceFromCollectory(uid)
+        Map drt = grailsApplication.mainContext.collectoryHubRestService.getTempDataResource(uid)
         if(drt.status in ['declined', 'dataAvailable', 'queuedForLoading']) {
-            saveTempDateResource([status: 'draft', uid: uid])
+            grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([status: 'draft'], uid)
         } else {
             return [status: 400, message: 'Only declined or data available data resource can be drafted.']
         }
@@ -369,36 +362,60 @@ class CollectoryHubRestService {
      */
     Map loadToProduction(String uid, Boolean indexing){
         if(isDataSubmittedForTempDataResource(uid)){
-            Map drt = getTempDataResourceFromCollectory(uid)
-            Map dr = convertTempDataResourceToDataResource(drt)
+            def (String drId, Map drt) = createOrSaveDataResource(uid)
 
-            Map result = createOrSaveDataResource(drt.prodUid, dr)
-            if(result.uid){
-                Map updatingTempDR = saveTempDateResource([prodUid: result.uid, uid: drt.uid])
-                if(!(updatingTempDR.status in [200, 201])){
-                    // roll back created data resource
-                    deleteDataResource(drt.prodUid)
-                    throw new Exception("Error loading data to production. Error occurred while updating temp data resource.")
-                }
-            }
+            // update contact details
+            Integer contactId = getOrCreateContact(authService.getEmail(), authService.userId)
+            createOrUpdateContactForEntity('dataResource', uid, contactId)
 
             Map indexResult
             if(indexing){
-                indexResult = collectoryHubJenkinsService.processWithIndexing(drt.uid, drt.prodUid)
+                indexResult = collectoryHubJenkinsService.processWithIndexing(uid, drId)
             } else {
-                indexResult = collectoryHubJenkinsService.processWithoutIndexing(drt.uid, drt.prodUid)
+                indexResult = collectoryHubJenkinsService.processWithoutIndexing(uid, drId)
             }
 
             if(indexResult.status in [200,201]){
-                Map jenkinsResult = saveTempDateResource([status: 'queuedForLoading', uid: drt.uid])
+                Map jenkinsResult = grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([status: 'queuedForLoading'], uid)
                 if(!(jenkinsResult.status in [200,201])){
                     throw new Exception("Error loading data to production. Error occurred while updating temp data resource.")
                 }
             }
 
-            result
+            [drId: drId, uid: uid]
         } else {
             [ error:true, message: 'Could not load to production. No data loaded.' ]
+        }
+    }
+
+    /**
+     * Create or update a data resource for a uid
+     * @param uid - drt id
+     * @return
+     */
+    public List createOrSaveDataResource(String uid) {
+        if(isDataSubmittedForTempDataResource(uid)) {
+            Map drt = grailsApplication.mainContext.collectoryHubRestService.getTempDataResource(uid)
+            Map dr = convertTempDataResourceToDataResource(drt)
+
+            Map result = createOrSaveDataResource(drt.prodUid, dr)
+            String newDrId = result.uid, drId = newDrId?:drt.prodUid
+            if(!(result.status in [200, 201])){
+                throw new Exception("An error occurred while creating new data resource.")
+            } else {
+                if(newDrId){
+                    Map updatingTempDR = grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([prodUid: newDrId], uid)
+                    if(!(updatingTempDR.status in [200, 201])){
+                        // roll back created data resource
+                        deleteDataResource(newDrId)
+                        throw new Exception("Error saving data resource uid to collectory. Error occurred while updating temp data resource.")
+                    }
+                }
+            }
+
+            [drId, drt]
+        } else {
+            [:]
         }
     }
 
@@ -420,7 +437,7 @@ class CollectoryHubRestService {
         dr[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
         dr[USER_HEADER] = authService.getEmail()
         String body = (dr as JSON).toString()
-        Map result = doPost(url, body)
+        Map result = collectoryHubService.doPost(url, body)
         if (result.status in [200, 201]) {
             if(!uid){
                 drId = parseUidFromLocation(result.location)
@@ -455,8 +472,9 @@ class CollectoryHubRestService {
         dr.pubDescripiton = drt.description
         addLicenseAndVersion(dr, drt.license)
         // source file
-        // todo: replace key fields
-        dr.connectionParameters = (getConnectionParameters(drt.sourceFile, ['catalogNumber']) as JSON).toString()
+        String[] fields = drt.keyFields?.split(',')
+        String separator = drt.csvSeparator?:','
+        dr.connectionParameters = (getConnectionParameters(drt.sourceFileUrl, fields, separator) as JSON).toString()
         dr
     }
 
@@ -469,7 +487,7 @@ class CollectoryHubRestService {
     Map addLicenseAndVersion(Map dr, String license){
         switch (license){
             case 'CCBY3Aus':
-                dr.licenseType = 'CC BY-Aus'
+                dr.licenseType = 'CC BY'
                 dr.licenseVersion = "3.0"
                 break;
             case 'CCBYNC3Aus':
@@ -498,13 +516,13 @@ class CollectoryHubRestService {
      * @param keyFields - List - fields combined to create a unique identifier for records in this resource
      * @return
      */
-    private Map getConnectionParameters(String url, List keyFields){
+    private Map getConnectionParameters(String url, String[] keyFields, String separator = ','){
         [
                 "protocol": "DwC",
                 "csv_text_enclosure": "\"",
                 "termsForUniqueKey": keyFields,
                 "csv_eol": "",
-                "csv_delimiter": ",",
+                "csv_delimiter": separator,
                 "automation": false,
                 "incremental": false,
                 "strip": false,
@@ -520,8 +538,8 @@ class CollectoryHubRestService {
      */
     Boolean isDataSubmittedForTempDataResource(String uid){
         try {
-            String url = "${grailsApplication.config.grails.serverURL}/api/dataCheck/serveFile?uid=${uid}"
-            Map result = doHead(url)
+            String url = "${grailsApplication.config.grails.serverURL}/dataCheck/serveFile?uid=${uid}"
+            Map result = collectoryHubService.doHead(url)
             return  result.status in [200, 201]
         } catch (Exception e) {
             log.error(e)
@@ -531,37 +549,12 @@ class CollectoryHubRestService {
     }
 
     /**
-     * This function does a http HEAD call on the given url.
-     * @param url
-     * @return
-     */
-    public Map doHead(String url) {
-        HeadMethod head = new HeadMethod(url);
-        HttpClient httpClient = new HttpClient();
-        int statusCode = httpClient.executeMethod(head);
-        [status: statusCode]
-    }
-
-    /**
-     * This function does a http HEAD call on the given url.
-     * @param url
-     * @return
-     */
-    public int doDelete(String url) {
-        DeleteMethod delete = new DeleteMethod(url);
-        HttpClient httpClient = new HttpClient();
-        httpClient.executeMethod(delete);
-    }
-
-    /**
      * delete a data resource
      * @param uid
      * @return
      */
     public Map deleteDataResource(String uid){
-        String url = "${grailsApplication.config.collectoryUrl}/dataResource/${uid}"
-        int statusCode = doDelete(url)
-        [status: statusCode]
+        deleteAnEntity('dataResource', uid)
     }
 
     /**
@@ -570,17 +563,121 @@ class CollectoryHubRestService {
      * @return
      */
     public Map deleteTempDataResource(String uid){
-        String url = "${grailsApplication.config.collectoryUrl}/tempDataResource/${uid}"
-        int statusCode = doDelete(url)
+        deleteAnEntity('tempDataResource', uid)
+    }
+
+    /**
+     * An function which will delete an entity on collectory
+     * @param entity
+     * @param uid
+     */
+    public void deleteAnEntity(String entity, String uid) {
+        String url = "${grailsApplication.config.collectoryUrl}/${entity}/${uid}"
+        int statusCode = collectoryHubService.doDelete(url)
         [status: statusCode]
     }
 
-    public createOrUpdateContactFor(String entity, String uid, String contactId){
+    /**
+     * Map details of contact from userdetails system to collectory compatible format.
+     * @param alaId
+     * @return
+     */
+    Map createContactMap(String alaId){
+        UserDetails userDetails = authService.getUserForUserId(alaId)
+        Map contact = [:]
+        if(userDetails){
+            String[] names = userDetails.displayName?.split(" ")
+            if(names?.size()>0){
+                contact.firstName = names[0]
+                if(names?.size()>1){
+                    contact.lastName = names[names.size() -1 ]
+                }
+            }
+
+            contact.email = userDetails.userName
+            contact.phone = userDetails.telephone
+            contact.publish = false
+        }
+
+        contact
+    }
+
+    /**
+     * get a user's contact id. If user does not exist, create one.
+     * @param email
+     * @param alaId
+     * @return
+     */
+    Integer getOrCreateContact(String email, String alaId){
+        Integer contactId
+        Map contact = getContact(email)
+        contactId = contact?.id
+        if(!contactId){
+            Map props = createContactMap(alaId)
+            contact = createContact(props)
+            if(contact.id){
+                return contact.id
+            } else {
+                throw new Exception("Could not create a contact for user.")
+            }
+        }
+
+        contactId
+    }
+
+    /**
+     * Get contact details of a user.
+     * @param email - email address
+     * @return
+     */
+    Map getContact(String email){
+        String url = "${grailsApplication.config.collectoryUrl}/contacts/email/${email}"
+        Map result = webService.get(url)
+        if(result.status in [200, 2001]){
+            return result.resp
+        }
+    }
+
+    /**
+     * Create contact details for a user
+     * @param props - contains properties like email, first name, fax number etc.
+     * @return
+     */
+    Map createContact(Map props){
+        String url = "${grailsApplication.config.collectoryUrl}/contacts/"
+        Map result = collectoryHubService.doPost(url, props)
+        if(result.resp){
+            return  JSON.parse(result.resp)
+        }
+    }
+
+    /**
+     * create a relationship between a contact and an entity
+     * @param entity
+     * @param uid
+     * @param contactId
+     * @return
+     */
+    public createOrUpdateContactForEntity(String entity, String uid, Integer contactId){
         String url = "${grailsApplication.config.collectoryUrl}/${entity}/${uid}/contacts/${contactId}"
         Map entityProps = [:]
         entityProps[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
         entityProps[USER_HEADER] = authService.getEmail()
         String body = (entityProps as JSON).toString()
-        doPost(url, body)
+        collectoryHubService.doPost(url, body)
+    }
+
+    /**
+     * Set status of a dataset to draft
+     * @param uid - drt id
+     * @return
+     */
+    Map resetStatus(String uid){
+        Map result = grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([status: 'draft'], uid)
+        if(!(result.status in [200, 201])){
+            throw new Exception("An error occurred while reseting status")
+        }
+
+        result
     }
 }

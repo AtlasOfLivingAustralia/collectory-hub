@@ -7,6 +7,7 @@ class UrlMappings {
             }
         }
 
+        "/jenkins/consoleMessage/$jobName/$id/$start"(controller: 'jenkins', action: 'console')
         "/"(view:"/index")
         "500"(view:'/error')
 	}

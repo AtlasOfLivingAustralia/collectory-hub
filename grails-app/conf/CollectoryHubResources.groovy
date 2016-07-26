@@ -16,7 +16,7 @@
  */
 modules = {
     commonStyles{
-        resource url: 'css/temp-style.css'
+        resource url: [dir:  'css', file: 'temp-style.css', plugin: 'collectory-hub']
     }
 
     collectory {

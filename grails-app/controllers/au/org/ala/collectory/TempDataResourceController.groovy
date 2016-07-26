@@ -3,12 +3,12 @@ package au.org.ala.collectory
 import au.org.ala.web.AlaSecured
 import au.org.ala.web.AuthService
 import au.org.ala.web.CASRoles
-import org.apache.commons.httpclient.HttpStatus
 import org.apache.commons.httpclient.util.URIUtil
 
 class TempDataResourceController {
     AuthService authService
     CollectoryHubRestService collectoryHubRestService
+    CollectoryHubJenkinsService collectoryHubJenkinsService
 
     def beforeInterceptor = [action: this.&checkUserPrivilege]
 
@@ -21,21 +21,33 @@ class TempDataResourceController {
             String alaId = authService.getUserId()
             params.isAdmin = authService.userInRole(CASRoles.ROLE_ADMIN)
 
-            Map tempDataResource = collectoryHubRestService.getTempDataResourceFromCollectory(params.uid)
-            params.isOwner = alaId == tempDataResource.alaId
-            params.canEdit = params.canView = params.isOwner || params.isAdmin
-            params.canSubmitForReview = tempDataResource.status == 'draft'
-            params.canDecline = params.canLoadToProduction = tempDataResource.status == 'submitted'
-            if(tempDataResource.status in ['submitted', 'queuedForLoading']) {
-                params.canEdit = false
+            Map tempDataResource = collectoryHubRestService.getTempDataResource(params.uid)
+            if(tempDataResource){
+                params.isOwner = alaId == tempDataResource.alaId
+                params.canEdit = params.canView = params.isOwner || params.isAdmin
+                params.canDelete = params.canSubmitForReview = (tempDataResource.status == 'draft') && params.isOwner
+                params.canCreateDataResource = params.canDecline = (tempDataResource.status == 'submitted') && params.isAdmin
+                params.canLoadToProduction = (tempDataResource.status in ['submitted', 'queuedForLoading']) && params.isAdmin
+                params.canReset = (tempDataResource.status != 'draft') && params.isAdmin
+                params.canTestRun = params.isAdmin && !!tempDataResource.prodUid
+                if((tempDataResource.status in ['submitted', 'queuedForLoading']) && params.canEdit){
+                    params.canEdit = false
+                }
             }
         }
 
         return true
     }
 
-    def internalServerError = { text ->
-        render(status: HttpStatus.SC_INTERNAL_SERVER_ERROR, text: text)
+    /**
+     * error page
+     */
+    def error(){
+        render view: '../systemError'
+    }
+
+    def notAuthorised(){
+        render view: '../notAuthorised'
     }
 
     /**
@@ -43,19 +55,28 @@ class TempDataResourceController {
      * @return
      */
     def myData() {
-        def currentUserId = authService.getUserId()
-        if (currentUserId) {
-            def userUploads = collectoryHubRestService.getListOfTempDataResource(currentUserId)
-            switch (bsVersion) {
-                case BootstrapJs.bs2:
-                    render text: "The system does not have a bootstrap 2 version of the requested page"
-                    break;
-                case BootstrapJs.bs3:
-                    render view: 'myData', model: [userUploads: userUploads, currentUserId: currentUserId]
-                    break;
+        try {
+            def currentUserId = authService.getUserId()
+            if (currentUserId) {
+                def userUploads = collectoryHubRestService.getListOfTempDataResource(currentUserId)
+                Map model = [userUploads: userUploads, currentUserId: currentUserId]
+
+                switch (bsVersion) {
+                    case BootstrapJs.bs2:
+                        render text: "The system does not have a bootstrap 2 version of the requested page"
+                        break;
+                    case BootstrapJs.bs3:
+                        render view: 'myData', model: model
+                        break;
+                }
+            } else {
+                login(createLink( action: 'myData', absolute: true))
             }
-        } else {
-            login(createLink( action: 'myData', absolute: true))
+        } catch(Exception e) {
+            e.printStackTrace()
+            flash.message = "An error occured while accessing your datasets. ${e.message}"
+            redirect action: 'error'
+
         }
     }
 
@@ -63,17 +84,24 @@ class TempDataResourceController {
      * List all temp data resources uploaded by this system.
      * @return
      */
-    @AlaSecured(value = "ROLE_ADMIN", redirectUri = "/")
+    @AlaSecured(value = "ROLE_ADMIN", redirectController = "tempDataResource", redirectAction = "notAuthorised")
     def adminList() {
-        def currentUserId = authService.getUserId()
-        def userUploads = collectoryHubRestService.getListOfTempDataResource('')
-        switch (bsVersion) {
-            case BootstrapJs.bs2:
-                render text: "The system does not have a bootstrap 2 version of the requested page"
-                break;
-            case BootstrapJs.bs3:
-                render view: 'adminList', model: [userUploads: userUploads, currentUserId: currentUserId]
-                break;
+        try {
+            String currentUserId = authService.getUserId()
+            List userUploads = collectoryHubRestService.getListOfTempDataResource('')
+            Map model = [userUploads: userUploads, currentUserId: currentUserId]
+            switch (bsVersion) {
+                case BootstrapJs.bs2:
+                    render text: "The system does not have a bootstrap 2 version of the requested page"
+                    break;
+                case BootstrapJs.bs3:
+                    render view: 'adminList', model: model
+                    break;
+            }
+        } catch (Exception e) {
+            e.printStackTrace()
+            flash.message = "An error occurred while accessing dataset list ${e.message}"
+            redirect action: 'error'
         }
     }
 
@@ -82,30 +110,37 @@ class TempDataResourceController {
      * @params uid - drt id
      * @return
      */
+    @AlaSecured(value = "ROLE_USER", redirectController = "tempDataResource", redirectAction = "error")
     def editMetadata() {
-        if (params.canEdit) {
+        try {
             if (params.uid) {
-                Map metadata = collectoryHubRestService.getTempDataResource(params.uid)
-                if (metadata) {
-                    switch (bsVersion) {
-                        case BootstrapJs.bs2:
-                            render text: "The system does not have a bootstrap 2 version of the requested page"
-                            break;
-                        case BootstrapJs.bs3:
-                            render view: 'editMetadata', model: metadata
-                            break;
+                if (params.canEdit) {
+                    Map metadata = collectoryHubRestService.getTempDataResource(params.uid)
+                    if (metadata) {
+                        switch (bsVersion) {
+                            case BootstrapJs.bs2:
+                                render text: "The system does not have a bootstrap 2 version of the requested page"
+                                break;
+                            case BootstrapJs.bs3:
+                                render view: 'editMetadata', model: metadata
+                                break;
+                        }
+                    } else {
+                        flash.message = "Could not find data resource."
+                        redirect(action: 'viewMetadata', params: [uid: params.uid])
                     }
                 } else {
-                    flash.message = "Could not find data resource."
-                    redirect  action: 'myData'
+                    flash.message = "You cannot edit this data resource."
+                    redirect(action: 'viewMetadata', params: [uid: params.uid])
                 }
             } else {
                 flash.message = "Param missing - uid"
                 redirect  action: 'myData'
             }
-        } else {
-            flash.message = "You cannot edit this data resource."
-            redirect(action: 'myData')
+        } catch (Exception e) {
+            e.printStackTrace()
+            flash.message = "An error occurred while accessing dataset list ${e.message}"
+            redirect action: 'error'
         }
     }
 
@@ -114,37 +149,47 @@ class TempDataResourceController {
      * @params uid - drt id
      * @return
      */
+    @AlaSecured(value = "ROLE_USER", redirectController = "tempDataResource", redirectAction = "error")
     def viewMetadata() {
-        if (params.canView) {
+        try {
             if (params.uid) {
-                Map metadata = collectoryHubRestService.getTempDataResource(params.uid)
-                if (metadata) {
-                    metadata.canEdit = params.canEdit
-                    metadata.isAdmin = params.isAdmin
-                    metadata.canDecline = params.canDecline
-                    metadata.canLoadToProduction = params.canLoadToProduction
-                    metadata.canSubmitForReview = params.canSubmitForReview
-                    metadata.index = metadata.numberOfRecords <= 200000
+                if (params.canView) {
+                    Map metadata = collectoryHubRestService.getTempDataResource(params.uid)
+                    if (metadata) {
+                        metadata.canEdit = params.canEdit
+                        metadata.isAdmin = params.isAdmin
+                        metadata.canDecline = params.canDecline
+                        metadata.canLoadToProduction = params.canLoadToProduction
+                        metadata.canSubmitForReview = params.canSubmitForReview
+                        metadata.canReset = params.canReset
+                        metadata.canCreateDataResource = params.canCreateDataResource
+                        metadata.canTestRun = params.canTestRun
+                        metadata.index = metadata.numberOfRecords <= 200000
 
-                    switch (bsVersion) {
-                        case BootstrapJs.bs2:
-                            render text: "The system does not have a bootstrap 2 version of the requested page"
-                            break;
-                        case BootstrapJs.bs3:
-                            render view: 'viewMetadata', model: metadata
-                            break;
+                        switch (bsVersion) {
+                            case BootstrapJs.bs2:
+                                render text: "The system does not have a bootstrap 2 version of the requested page"
+                                break;
+                            case BootstrapJs.bs3:
+                                render view: 'viewMetadata', model: metadata
+                                break;
+                        }
+                    } else {
+                        flash.message = "Could not find data resource."
+                        redirect action: 'myData'
                     }
                 } else {
-                    flash.message = "Could not find data resource."
-                    redirect action: 'myData'
+                    flash.message = "You do not have privilege to view this data resource.  "
+                    redirect(action: 'myData')
                 }
             } else {
                 flash.message = "Param missing - uid"
                 redirect action: 'myData'
             }
-        } else {
-            flash.message = "You do not have privilege to view this data resource.  "
-            redirect(action: 'myData')
+        } catch (Exception e) {
+            e.printStackTrace()
+            flash.message = "An error occurred while accessing dataset list ${e.message}"
+            redirect action: 'error'
         }
     }
 
@@ -163,41 +208,37 @@ class TempDataResourceController {
      * @params uid - required - drt id
      * @return
      */
+    @AlaSecured(value = "ROLE_USER", redirectController = "tempDataResource", redirectAction = "error")
     def saveTempDataResource() {
-        Boolean renderEdit = false
-        // only people with right privilege can save
-        if (params.canEdit) {
-            try {
-                Map result = collectoryHubRestService.saveTempDateResource(params)
+        try {
+            // only people with right privilege can save
+            if (params.canEdit) {
+                Map result = collectoryHubRestService.saveTempDataResource(params, params.uid)
                 // check if webservice executed successfully
                 if (result?.status == 200 || result?.status == 201) {
                     flash.message = "Successfully saved!"
                     redirect(action: 'viewMetadata', params: [uid: params.uid])
                 } else {
                     flash.message = 'An error occurred when saving this data.'
-                    renderEdit = true
+                    // adds links and other metadata
+                    collectoryHubRestService.preFillSystemDetails(params)
+                    switch (bsVersion) {
+                        case BootstrapJs.bs2:
+                            render text: "The system does not have a bootstrap 2 version of the requested page"
+                            break;
+                        case BootstrapJs.bs3:
+                            render view: 'editMetadata', model: params
+                            break;
+                    }
                 }
-            } catch (Exception e) {
-                flash.message = "An error occurred while saving data: ${e.message}"
-                renderEdit = true
+            } else {
+                flash.message = "You do not have privilege to edit this data resource."
+                redirect(action: 'viewMetadata', params: [uid: params.uid])
             }
-        } else {
-            flash.message = "You do not have privilege to edit this data resource."
-            redirect(action: 'viewMetadata', params: [uid: params.uid])
-        }
-
-        // rendering in this function to preserve user input.
-        if (renderEdit) {
-            // adds links and other metadata
-            collectoryHubRestService.preFillSystemDetails(params)
-            switch (bsVersion) {
-                case BootstrapJs.bs2:
-                    render text: "The system does not have a bootstrap 2 version of the requested page"
-                    break;
-                case BootstrapJs.bs3:
-                    render view: 'editMetadata', model: params
-                    break;
-            }
+        } catch (Exception e) {
+            e.printStackTrace()
+            flash.message = "An error occurred while saving a dataset. ${e.message}"
+            redirect action: 'error'
         }
     }
 
@@ -206,30 +247,38 @@ class TempDataResourceController {
      * Only owner of a data resource can call this action.
      * @return
      */
+    @AlaSecured(value = "ROLE_USER", redirectController = "tempDataResource", redirectAction = "error")
     def submitDataForReview(){
-        if(params.canSubmitForReview){
-            if(params.isOwner && params.uid){
-                Map result = collectoryHubRestService.submitTempDataResourceForReview(params.uid)
-                // check if webservice executed successfully
-                if(result?.isValid){
-                    if (result?.status == 200 || result?.status == 201) {
-                        flash.message = "Successfully submitted data resource for review!"
-                        redirect(action: 'viewMetadata', params: [uid: params.uid])
-                    } else {
-                        flash.message = 'An error occurred when saving this data.'
-                        redirect action: 'myData'
-                    }
-                } else  {
-                    flash.message = result.message
-                    redirect action: 'editMetadata', params: [uid: params.uid]
+        try {
+            if(params.uid){
+                if(params.canSubmitForReview){
+                        Map result = collectoryHubRestService.submitTempDataResourceForReview(params.uid)
+                        // check if webservice executed successfully
+                        if(result?.isValid){
+                            if (result?.status in [200, 201]) {
+                                flash.message = "Successfully submitted data resource for review!"
+                                redirect(action: 'viewMetadata', params: [uid: params.uid])
+                            } else {
+                                flash.message = 'An error occurred when saving this data.'
+                                redirect action: 'myData'
+                            }
+                        } else  {
+                            flash.message = result.message
+                            redirect action: 'editMetadata', params: [uid: params.uid]
+                        }
+                } else {
+                    flash.message = "Only draft data resource can be submitted for review."
+                    redirect action: 'myData'
                 }
             } else {
-                flash.message = "Only owners can submit data resource for review."
+                flash.message = "Param missing - uid"
                 redirect action: 'myData'
             }
-        } else {
-            flash.message = "Only draft data resource can be submitted for review."
-            redirect action: 'myData'
+        } catch (Exception e) {
+            log.error(e.message)
+            e.printStackTrace()
+            flash.message = "And error occured while submitting data from review. ${e.message}"
+            redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
     }
 
@@ -241,18 +290,27 @@ class TempDataResourceController {
      * @params uid - required - drt id
      * @return
      */
+    @AlaSecured(value = "ROLE_USER", redirectController = "tempDataResource", redirectAction = "error")
     def delete(){
-        if(params.uid) {
-            if (params.canEdit) {
-//                collectoryHubRestService.deleteTempDataResource(params.uid)
-                redirect uri: "${grailsApplication.config.grails.serverURL}/api/myDatasets/deleteResource?uid=${params.uid}"
+        try {
+            if(params.uid) {
+                if (params.canEdit) {
+                    collectoryHubRestService.deleteTempDataResource(params.uid)
+                    flash.message = "Deleted dataset ${params.uid}"
+                    redirect action: 'myData'
+                } else {
+                    flash.message = 'Cannot delete since you cannot edit this data resource.'
+                    redirect(action: 'viewMetadata', params: [uid: params.uid])
+                }
             } else {
-                flash.message = 'Cannot delete since you cannot edit this data resource.'
+                flash.message = 'Cannot delete since uid was not provided.'
                 redirect action: 'myData'
             }
-        } else {
-            flash.message = 'Cannot delete since uid was not provided.'
-            redirect action: 'myData'
+        } catch (Exception e) {
+            log.error(e.message)
+            e.printStackTrace()
+            flash.message = "And error occured while deleting. ${e.message}"
+            redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
     }
 
@@ -264,18 +322,26 @@ class TempDataResourceController {
      * @params uid - required - drt id
      * @return
      */
+    @AlaSecured(value = "ROLE_USER", redirectController = "tempDataResource", redirectAction = "error")
     def reload() {
-        if(params.uid){
-            if(params.canEdit){
-                collectoryHubRestService.draftTempDataResource(params.uid)
-                redirect uri: "${grailsApplication.config.grails.serverURL}/dataCheck?reload=${params.uid}"
+        try {
+            if(params.uid){
+                if(params.canEdit){
+                    collectoryHubRestService.draftTempDataResource(params.uid)
+                    redirect uri: "${grailsApplication.config.grails.serverURL}/dataCheck/reload?dataResourceUid=${params.uid}"
+                } else {
+                    flash.message = 'Cannot reload since you cannot edit this data resource.'
+                    redirect(action: 'viewMetadata', params: [uid: params.uid])
+                }
             } else {
-                flash.message = 'Cannot reload since you cannot edit this data resource.'
+                flash.message = 'Cannot reload since uid was not provided.'
                 redirect action: 'myData'
             }
-        } else {
-            flash.message = 'Cannot reload since uid was not provided.'
-            redirect action: 'myData'
+        } catch (Exception e) {
+            log.error(e.message)
+            e.printStackTrace()
+            flash.message = "And error occured while reloading. ${e.message}"
+            redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
     }
 
@@ -285,24 +351,31 @@ class TempDataResourceController {
      * @params uid - drt id
      * @return
      */
-    @AlaSecured(value = "ROLE_ADMIN", redirectUri = '/')
+    @AlaSecured(value = "ROLE_ADMIN", redirectController = "tempDataResource", redirectAction = "error")
     def decline(){
-        if(params.canDecline){
+        try {
             if(params.uid){
-                Map result = collectoryHubRestService.declineTempDataResource(params.uid)
-                if (result?.status == 200 || result?.status == 201) {
-                    flash.message = "Data resource has been declined"
-                    redirect(action: 'viewMetadata', params: [uid: params.uid])
+                if(params.canDecline){
+                    Map result = collectoryHubRestService.declineTempDataResource(params.uid)
+                    if (result?.status == 200 || result?.status == 201) {
+                        flash.message = "Data resource has been declined"
+                        redirect(action: 'viewMetadata', params: [uid: params.uid])
+                    } else {
+                        flash.message = 'An error occurred while saving the data resource.'
+                        redirect action: 'myData'
+                    }
                 } else {
-                    flash.message = 'An error occurred while saving the data resource.'
-                    redirect action: 'myData'
+                    flash.message = "Cannot decline data. Data resource must be submitted for review first."
+                    redirect(action: 'viewMetadata', params: [uid: params.uid])
                 }
             } else {
                 flash.message = "Uid must be provided"
-                redirect(action: 'viewMetadata', params: [uid: params.uid])
+                redirect(action: 'adminList')
             }
-        } else {
-            flash.message = "Cannot decline data. Data resource must be submitted for review first."
+        } catch (Exception e) {
+            log.error(e.message)
+            e.printStackTrace()
+            flash.message = "And error occured while declining a dataset. ${e.message}"
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
     }
@@ -313,11 +386,11 @@ class TempDataResourceController {
      * @params uid - drt id
      * @return
      */
-    @AlaSecured(value = "ROLE_ADMIN", redirectUri = '/')
+    @AlaSecured(value = "ROLE_ADMIN", redirectController = "tempDataResource", redirectAction = "error")
     def loadToProduction() {
         try {
-            if(params.canLoadToProduction) {
-                if(params.uid){
+            if(params.uid) {
+                if(params.canLoadToProduction) {
                     Boolean index = params.process in ['index']
                     Map result = collectoryHubRestService.loadToProduction(params.uid, index)
                     if(result.error){
@@ -327,15 +400,105 @@ class TempDataResourceController {
                     }
                     redirect(action: 'viewMetadata', params: [uid: params.uid])
                 } else {
-                    flash.message = "Uid must be provided"
+                    flash.message = "Cannot load data to production. Data resource must be submitted for review first."
                     redirect(action: 'viewMetadata', params: [uid: params.uid])
                 }
             } else {
-                flash.message = "Cannot load data to production. Data resource must be submitted for review first."
+                flash.message = "Uid must be provided"
                 redirect(action: 'viewMetadata', params: [uid: params.uid])
             }
         } catch (Exception e) {
-            flash.message = e.message
+            flash.message = "An error occurred while loading to production. ${e.message}"
+            redirect(action: 'viewMetadata', params: [uid: params.uid])
+        }
+    }
+
+    /**
+     * Test run a production ready dataset.
+     * @params uid - drt id
+     * @params
+     */
+    @AlaSecured(value = "ROLE_ADMIN", redirectController = 'tempDataResource', redirectAction = 'myData')
+    def testRun(){
+        try {
+            if(params.uid){
+                if(params.canLoadToProduction){
+                    Map result = collectoryHubJenkinsService.testRun(params.uid)
+                    redirect(uri: "/jenkins/console/${result.jobName}/${result.buildNumber}/${result.start}?uid=${params.uid}")
+                } else {
+                    flash.message="You can only test run after the dataset is production ready."
+                    redirect(action: 'viewMetadata', params: [uid: params.uid])
+                }
+            } else {
+                flash.message="Parameter uid is necessary"
+                redirect(action: 'myData')
+            }
+        } catch (Exception e) {
+            flash.message = "An error occurred while doing a test run. ${e.message}"
+            redirect(action: 'viewMetadata', params: [uid: params.uid])
+        }
+    }
+
+    /**
+     * Test run a production ready dataset.
+     * @params uid - drt id
+     * @params
+     */
+    @AlaSecured(value = "ROLE_ADMIN", redirectController = 'tempDataResource', redirectAction = 'myData')
+    def resetStatus(){
+        try {
+            if(params.uid){
+                try{
+                    collectoryHubRestService.resetStatus(params.uid)
+                    flash.message = "Successfully reset status."
+                    redirect(action: 'viewMetadata', params: [uid: params.uid])
+                } catch (Exception e){
+                    flash.message = "An error occurred while trying to set status. ${e.message}"
+                    redirect(action: 'viewMetadata', params: [uid: params.uid])
+                }
+            } else {
+                flash.message="Parameter uid is necessary"
+                redirect(action: 'myData')
+            }
+        } catch (Exception e) {
+            flash.message = "An error occurred while reseting dataset status. ${e.message}"
+            redirect(action: 'viewMetadata', params: [uid: params.uid])
+        }
+    }
+
+    /**
+     * Test run a production ready dataset.
+     * @params uid - drt id
+     * @params
+     */
+    @AlaSecured(value = "ROLE_ADMIN", redirectController = 'tempDataResource', redirectAction = 'myData')
+    def createDr(){
+        try {
+            if(params.canCreateDataResource){
+                if(params.uid){
+                    try{
+                        def (String drId, Map drt)= collectoryHubRestService.createOrSaveDataResource(params.uid)
+                        if(drId){
+                            flash.message = "Successfully created data resource!"
+                        } else {
+                            flash.message = "Failed to create data resource."
+                        }
+
+                        redirect(action: 'viewMetadata', params: [uid: params.uid])
+                    } catch (Exception e){
+                        flash.message = "An error occurred while trying to set status. ${e.message}"
+                        redirect(action: 'viewMetadata', params: [uid: params.uid])
+                    }
+                } else {
+                    flash.message="Parameter uid is necessary"
+                    redirect(action: 'myData')
+                }
+            } else {
+                flash.message = "You cannot create a data resource."
+                redirect(action: 'viewMetadata', params: [uid: params.uid])
+            }
+        } catch (Exception e){
+            flash.message = "An error occurred while creating a new data resource"
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
     }

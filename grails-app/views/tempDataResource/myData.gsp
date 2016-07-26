@@ -33,7 +33,7 @@
 
             <div class="row">
                 <div class="col-sm-12">
-                    <a class="btn btn-primary pull-right" onclick="window.location = '${createLink(uri:'/')}'">Add new</a>
+                    <a class="btn btn-primary pull-right" onclick="window.location = '${createLink(uri:'/')}'">Add new dataset</a>
                 </div>
             </div>
             <div class="row">
@@ -61,7 +61,7 @@
                                 <td>${userUpload.lastUpdated}</td>
                                 <td><g:message code="tempDataResource.status.${userUpload.status}" default="${userUpload.status}"></g:message></td>
                                 <td>
-                                    <g:link class="btn btn-default" controller="tempDataResource" action="viewMetadata"
+                                    <g:link class="btn btn-default btn-primary" controller="tempDataResource" action="viewMetadata"
                                             params="${[uid: userUpload.uid]}">
                                         <i class="icon-cog"></i> View details
                                     </g:link>
@@ -76,14 +76,6 @@
                                             <i class="icon-cog"></i> Configure charts
                                         </g:link>
                                     </g:if>
-
-                                    <g:link class="btn btn-default" controller="tempDataResource" action="reload"
-                                            params="${[uid: userUpload.uid]}">
-                                        <i class="icon-repeat"></i> Reload
-                                    </g:link>
-
-                                    <g:link controller="tempDataResource" action="delete"
-                                            class="btn btn-danger" params="[uid: userUpload.uid]">Delete</g:link>
                                 </td>
                             </tr>
                         </g:each>

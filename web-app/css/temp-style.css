@@ -284,3 +284,20 @@ ul.facets {
 .table.table-borderless tbody tr td, .table.table-borderless tbody tr th, .table.table-borderless thead tr th {
     border: none;
 }
+
+.console{
+    background-color: black;
+    color: white;
+}
+
+.console-height{
+    min-height: 500px;
+}
+
+.borderless{
+    border: hidden;
+}
+
+.form-inline-block{
+    display: inline-block;
+}
