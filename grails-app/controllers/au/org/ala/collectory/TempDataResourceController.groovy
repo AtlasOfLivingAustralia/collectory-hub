@@ -393,12 +393,12 @@ class TempDataResourceController {
                 if(params.canLoadToProduction) {
                     Boolean index = params.process in ['index']
                     Map result = collectoryHubRestService.loadToProduction(params.uid, index)
-                    if(result.error){
-                        flash.message = result.message
+                    if(result.buildNumber && result.jobName) {
+                        redirect(uri: "/jenkins/console/${result.jobName}/${result.buildNumber}/${result.start}?uid=${params.uid}")
                     } else {
-                        flash.message = "Successfully loaded to production!"
+                        flash.message = "Failed to submit jenkins job!"
+                        redirect(action: 'viewMetadata', params: [uid: params.uid])
                     }
-                    redirect(action: 'viewMetadata', params: [uid: params.uid])
                 } else {
                     flash.message = "Cannot load data to production. Data resource must be submitted for review first."
                     redirect(action: 'viewMetadata', params: [uid: params.uid])
@@ -422,9 +422,14 @@ class TempDataResourceController {
     def testRun(){
         try {
             if(params.uid){
-                if(params.canLoadToProduction){
+                if(params.canTestRun){
                     Map result = collectoryHubJenkinsService.testRun(params.uid)
-                    redirect(uri: "/jenkins/console/${result.jobName}/${result.buildNumber}/${result.start}?uid=${params.uid}")
+                    if(result.buildNumber && result.jobName) {
+                        redirect(uri: "/jenkins/console/${result.jobName}/${result.buildNumber}/${result.start}?uid=${params.uid}")
+                    } else {
+                        flash.message = "Failed to submit jenkins job!"
+                        redirect(action: 'viewMetadata', params: [uid: params.uid])
+                    }
                 } else {
                     flash.message="You can only test run after the dataset is production ready."
                     redirect(action: 'viewMetadata', params: [uid: params.uid])

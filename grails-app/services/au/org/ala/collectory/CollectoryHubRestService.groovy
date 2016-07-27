@@ -369,10 +369,13 @@ class CollectoryHubRestService {
             createOrUpdateContactForEntity('dataResource', uid, contactId)
 
             Map indexResult
+            Map result =[:]
             if(indexing){
                 indexResult = collectoryHubJenkinsService.processWithIndexing(uid, drId)
+                result.jobName = grailsApplication.config.jenkins.processWithIndexing
             } else {
                 indexResult = collectoryHubJenkinsService.processWithoutIndexing(uid, drId)
+                result.jobName = grailsApplication.config.jenkins.processWithoutIndexing
             }
 
             if(indexResult.status in [200,201]){
@@ -382,7 +385,12 @@ class CollectoryHubRestService {
                 }
             }
 
-            [drId: drId, uid: uid]
+            if(indexResult?.location){
+                result.buildNumber = collectoryHubJenkinsService.getBuildNumberFromQueue(indexResult.location)
+                result.start = 0
+            }
+
+            result
         } else {
             [ error:true, message: 'Could not load to production. No data loaded.' ]
         }
