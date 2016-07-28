@@ -25,7 +25,7 @@ class JenkinsController {
                     break;
             }
         } else {
-            flash.message = 'Id parameter is mandatory'
+            flash.message = message(code:"jenkins.missingId", default:'Id parameter is mandatory')
             redirect( controller: 'tempDataResource', action: 'viewMetadata', params: [uid: params.uid])
         }
     }

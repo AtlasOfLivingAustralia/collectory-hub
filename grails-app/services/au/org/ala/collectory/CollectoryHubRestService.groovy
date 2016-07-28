@@ -329,7 +329,7 @@ class CollectoryHubRestService {
             }
         }
 
-        [ isValid: valid, invalidFields: inValidFields, message: "The following fields are mandatory - ${inValidFields.join(', ')}." ]
+        [ isValid: valid, invalidFields: inValidFields, message: "The following fields are mandatory - ${inValidFields.join(', ')}.", args: [inValidFields.join(', ')] ]
     }
 
     /**
