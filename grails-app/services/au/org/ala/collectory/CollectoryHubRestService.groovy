@@ -19,7 +19,6 @@ import au.org.ala.ws.service.WebService
 import grails.converters.JSON
 import grails.plugin.cache.CacheEvict
 import grails.plugin.cache.Cacheable
-import groovy.json.JsonSlurper
 import org.apache.commons.httpclient.util.URIUtil
 
 import javax.annotation.PostConstruct
@@ -35,7 +34,8 @@ class CollectoryHubRestService {
     static final String DEFAULT_API_KEY_HEADER = "api_key"
     static final String USER_HEADER = "user"
     static final List  REQUIRED_FIELDS = ["name", "description", "license", "citation"]
-    static final List COMMON_FIELDS_DR_DRT = ['informationWithheld', 'dataGeneralizations', 'citation', 'name', '']
+    static final List COMMON_FIELDS_DR_DRT = ['informationWithheld', 'dataGeneralizations', 'citation', 'name']
+    static final List TEMP_DATA_RESROUCE_STATUSES = ['draft', 'submitted', 'declined', 'queuedForLoading', 'dataAvailable']
     String COLLECTIONS_BASE_URL
 
     @PostConstruct
@@ -171,10 +171,17 @@ class CollectoryHubRestService {
      * Retrieves a listing of uploads for this user.
      * @return JSON list of data resources
      */
-    def getUserUploads(String currentUserId){
-        def url = "${grailsApplication.config.collectoryUrl}/tempDataResource?alaId=${currentUserId}"
-        def js = new JsonSlurper()
-        js.parseText(new URL(url).text)
+    Map getUserUploads(String currentUserId, String webserviceUrl = '', String max =10, String offset=0,  String status='',
+                       String sortField='lastUpdated', String sortOrder='desc'){
+        def url = "${grailsApplication.config.collectoryUrl}/tempDataResource?alaId=${currentUserId}" +
+                "&webserviceUrl=${URIUtil.encodeWithinQuery(webserviceUrl)}&max=${max}&offset=${offset}&status=${status}&sortField=${sortField}" +
+                "&sortOrder=${sortOrder}"
+        Map result = webService.get(url)
+        if(result.statusCode in [200, 201]){
+            result.resp
+        } else {
+            throw new Exception("Could not get temp data resource for user ${currentUserId}")
+        }
     }
 
     /**
@@ -274,18 +281,23 @@ class CollectoryHubRestService {
     /**
      * Get all temp data resource for a user.
      * @param userId - ala id
-     * @return List of temp data resources
+     * @param max
+     * @param offset
+     * @param status
+     * @param sortField
+     * @param sortOrder
+     * @return A map containing list of temp data resources and total temp data resources in db matiching passed criteria.
      */
-    List getListOfTempDataResource(String userId){
-        def userUploads = getUserUploads(userId)
-        //filter uploads by biocache URL
-        def filteredUploads = userUploads.findAll { upload ->
-            upload.webserviceUrl == grailsApplication.config.biocacheServiceUrl
-        }
+    Map getListOfTempDataResource(String userId, String max =10, String offset=0,  String status='',
+        String sortField='lastUpdated', String sortOrder='desc') {
+        Map userUploads = getUserUploads(userId, grailsApplication.config.biocacheServiceUrl, max, offset,  status,
+                sortField, sortOrder)
 
-        filteredUploads.each { dtr ->
+        userUploads.resources = userUploads.resources?.collect { dtr ->
             cleanTempDateResource(dtr)
         }
+
+        userUploads
     }
 
     /**

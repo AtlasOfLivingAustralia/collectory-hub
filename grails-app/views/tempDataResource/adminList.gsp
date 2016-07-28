@@ -19,52 +19,45 @@
 <%@ page contentType="text/html;charset=UTF-8" %>
 <html xmlns="http://www.w3.org/1999/html">
 <head>
-    <title>My datasets | ${grailsApplication.config.skin.appName} | ${grailsApplication.config.skin.orgNameLong}</title>
+    <title>All datasets | ${grailsApplication.config.skin.appName} | ${grailsApplication.config.skin.orgNameLong}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
+    <r:require modules="commonStyles"></r:require>
+    <g:set var="statusMessage" value="${message(code: "tempDataResource.status.${params.status}")}" />
 </head>
 
 <body>
+<ol class="breadcrumb">
+    <li><a href="${createLink(uri: '/')}">Home</a></li>
+    <li class="active">All datasets</li>
+</ol>
 <div class="panel panel-default">
     <div class="panel-heading">
         <h1>${grailsApplication.config.skin.appName} - Admin list</h1>
     </div>
 
     <div class="panel-body">
-        <g:if test="${userUploads}">
+        <p class="lead">
+            Here is a listing of all datasets in sandbox.<br/>
+        </p>
 
-            <g:if test="${params.containsKey("deleteSuccess")}">
-                <g:if test="${params.deleteSuccess}">
-                    <div class="alert alert-info" role="alert">
-                        Dataset deleted.
-                    </div>
-                </g:if>
-                <g:else>
-                    <div class="alert alert-error" role="alert">
-                        Unable to delete this dataset.
-                    </div>
-                </g:else>
-            </g:if>
-            <p class="lead">
-                Here is a listing of all datasets in sandbox.<br/>
-            </p>
-
-            <div class="row">
-                <div class="col-sm-12">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th>User Id</th>
-                            <th>Dataset Id</th>
-                            <th>Dataset name</th>
-                            <th>Number of records</th>
-                            <th>Date created</th>
-                            <th>Date updated</th>
-                            <th>Status</th>
-                            <th></th>
-                        </tr>
-                        </thead>
-                        <g:each in="${userUploads}" var="userUpload">
+        <div class="row">
+            <div class="col-sm-12">
+                <table class="table">
+                    <thead>
+                    <tr>
+                        <th>User Id</th>
+                        <th>Dataset Id</th>
+                        <th>Dataset name</th>
+                        <th>Number of records</th>
+                        <th>Date created</th>
+                        <th>Date updated</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <g:if test="${resources}">
+                        <g:each in="${resources}" var="userUpload">
                             <tr>
                                 <td>${userUpload.alaId}</td>
                                 <td>${userUpload.uid}</td>
@@ -72,9 +65,11 @@
                                 <td>${userUpload.numberOfRecords}</td>
                                 <td>${userUpload.dateCreated}</td>
                                 <td>${userUpload.lastUpdated}</td>
-                                <td><g:message code="tempDataResource.status.${userUpload.status}" default="${userUpload.status}"></g:message></td>
+                                <td><g:message code="tempDataResource.status.${userUpload.status}"
+                                               default="${userUpload.status}"></g:message></td>
                                 <td>
-                                    <g:link class="btn btn-default btn-primary" controller="tempDataResource" action="viewMetadata"
+                                    <g:link class="btn btn-default btn-primary" controller="tempDataResource"
+                                            action="viewMetadata"
                                             params="${[uid: userUpload.uid]}">
                                         <i class="icon-cog"></i> View details
                                     </g:link>
@@ -84,21 +79,78 @@
                                             class="icon-th-list"></i> View records</a>
 
                                     <g:if test="${!grailsApplication.config.sandbox.hideCharts.toBoolean()}">
-                                        <g:link class="btn btn-default" controller="myDatasets" action="chartOptions"
+                                        <g:link class="btn btn-default" controller="adminListsets" action="chartOptions"
                                                 params="${[tempUid: userUpload.uid]}">
                                             <i class="icon-cog"></i> Configure charts
                                         </g:link>
                                     </g:if>
                             </tr>
                         </g:each>
-                    </table>
+                    </g:if>
+                    <g:else>
+                        <tr>
+                            <td colspan="8">
+                                <h4>Could not find any datasets ${params.status ? "with status ${statusMessage}" : ''}.</h4>
+                            </td>
+                        </tr>
+                    </g:else>
+                </table>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Order by:</label>
+
+                        <div class="col-sm-10">
+                            <div class="btn-group" role="group">
+                                <g:link class="btn btn-default ${params.sortField == 'dateCreated' ? 'active' : ''}"
+                                        controller="tempDataResource" action="adminList"
+                                        params="${params + [sortField: 'dateCreated', sortOrder: 'desc']}">Date created</g:link>
+                                <g:link class="btn btn-default ${params.sortField == 'lastUpdated' ? 'active' : ''}"
+                                        controller="tempDataResource" action="adminList"
+                                        params="${params + [sortField: 'lastUpdated', sortOrder: 'desc']}">Last updated</g:link>
+                                <g:link class="btn btn-default ${(params.sortField == 'numberOfRecords') && (params.sortOrder == 'desc') ? 'active' : ''}"
+                                        controller="tempDataResource" action="adminList"
+                                        params="${params + [sortField: 'numberOfRecords', sortOrder: 'desc']}">Most number of records</g:link>
+                                <g:link class="btn btn-default ${(params.sortField == 'numberOfRecords') && (params.sortOrder == 'asc') ? 'active' : ''}"
+                                        controller="tempDataResource" action="adminList"
+                                        params="${params + [sortField: 'numberOfRecords', sortOrder: 'asc']}">Least number of records</g:link>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </g:if>
-        <g:else>
-            <p class="lead">
-                You currently have no uploaded datasets. <g:link uri="/">Click here</g:link> to upload data.</p>
-        </g:else>
+            <div class="col-sm-4">
+                <g:paginate class="pull-right pagination-control" next="Next" prev="Previous"
+                            maxsteps="0" controller="tempDataResource"
+                            action="adminList" total="${total}" params="${params}"/>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">Filter by status:</label>
+                        <div class="col-sm-10">
+                            <div class="btn-group" role="group">
+                                <g:link class="btn btn-default ${params.status in [null, ''] ? 'active' : ''}"
+                                        controller="tempDataResource" action="adminList"
+                                        params="${[status: '']}">All</g:link>
+                                <g:each in="${statuses}" var="status">
+                                    <g:link class="btn btn-default ${status == params.status ? 'active' : ''}"
+                                            controller="tempDataResource" action="adminList"
+                                            params="${[status: status]}"><g:message
+                                            code="tempDataResource.status.${status}"></g:message></g:link>
+                                </g:each>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </body>

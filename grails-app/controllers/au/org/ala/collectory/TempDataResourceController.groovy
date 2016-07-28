@@ -58,15 +58,18 @@ class TempDataResourceController {
         try {
             def currentUserId = authService.getUserId()
             if (currentUserId) {
-                def userUploads = collectoryHubRestService.getListOfTempDataResource(currentUserId)
-                Map model = [userUploads: userUploads, currentUserId: currentUserId]
-
+                String max = params.max?:10, offset = params.offset?:0, status = params.status?:'',
+                       sortField = params.sortField?:'lastUpdated', sortOrder = params.sortOrder?:'desc'
+                Map userUploads = collectoryHubRestService.getListOfTempDataResource(currentUserId, max, offset, status, sortField, sortOrder)
+                userUploads.currentUserId = currentUserId
+                userUploads.params = [max      : max, offset: offset, status: status, sortField: sortField, sortOrder: sortOrder]
+                userUploads.statuses = collectoryHubRestService.TEMP_DATA_RESROUCE_STATUSES
                 switch (bsVersion) {
                     case BootstrapJs.bs2:
                         render text: message(code: "bs2.notFoundMessage", default: "The system does not have a bootstrap 2 version of the requested page")
                         break;
                     case BootstrapJs.bs3:
-                        render view: 'myData', model: model
+                        render view: 'myData', model: userUploads
                         break;
                 }
             } else {
@@ -87,14 +90,18 @@ class TempDataResourceController {
     def adminList() {
         try {
             String currentUserId = authService.getUserId()
-            List userUploads = collectoryHubRestService.getListOfTempDataResource('')
-            Map model = [userUploads: userUploads, currentUserId: currentUserId]
+            String max = params.max?:10, offset = params.offset?:0, status = params.status?:'',
+                    sortField = params.sortField?:'lastUpdated', sortOrder = params.sortOrder?:'desc'
+            Map userUploads = collectoryHubRestService.getListOfTempDataResource('', max, offset, status, sortField, sortOrder)
+            userUploads.currentUserId = currentUserId
+            userUploads.params = [max      : max, offset: offset, status: status, sortField: sortField, sortOrder: sortOrder]
+            userUploads.statuses = collectoryHubRestService.TEMP_DATA_RESROUCE_STATUSES
             switch (bsVersion) {
                 case BootstrapJs.bs2:
                     render text: message(code: "bs2.notFoundMessage", default: "The system does not have a bootstrap 2 version of the requested page")
                     break;
                 case BootstrapJs.bs3:
-                    render view: 'adminList', model: model
+                    render view: 'adminList', model: userUploads
                     break;
             }
         } catch (Exception e) {
@@ -157,6 +164,7 @@ class TempDataResourceController {
                     if (metadata) {
                         metadata.canEdit = params.canEdit
                         metadata.isAdmin = params.isAdmin
+                        metadata.isOwner = params.isOwner
                         metadata.canDecline = params.canDecline
                         metadata.canLoadToProduction = params.canLoadToProduction
                         metadata.canSubmitForReview = params.canSubmitForReview

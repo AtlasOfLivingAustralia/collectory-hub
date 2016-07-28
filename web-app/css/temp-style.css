@@ -301,3 +301,7 @@ ul.facets {
 .form-inline-block{
     display: inline-block;
 }
+
+ul.pagination-control{
+    margin: 0px;
+}

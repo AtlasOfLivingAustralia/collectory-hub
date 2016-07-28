@@ -60,7 +60,7 @@
             dataType: 'json',
             success: function (data, resp) {
                 $("#console-output").append(data.text)
-
+                $(window).scrollTop($("#console-loading").offset().top);
                 if(data.isMoreData){
                     nextStart = data.nextStart
                     $("#console-loading").removeClass('hide')

@@ -122,33 +122,35 @@
 
 <div class="panel panel-default">
     <div class="panel-body">
-        <div class="row">
-            <div class="col-sm-12">
-                <p>Data actions</p>
-                <button class="btn btn-default" onclick="window.location = '${sandboxLink}'">View records</button>
-                <g:if test="${reloadLink && canEdit}">
-                    <button type="submit" class="btn btn-default"
-                            onclick="window.location = '${reloadLink}'">Reload data</button>
-                </g:if>
-                <g:if test="${deleteLink && canEdit}">
-                    <form method="POST"  action="${deleteLink}" class="form-inline-block">
-                        <button type="submit" class="btn btn-default btn-danger">Delete</button>
-                    </form>
-                </g:if>
+        <g:if test="${isOwner}">
+            <div class="row">
+                <div class="col-sm-12">
+                    <p>Data actions</p>
+                    <button class="btn btn-default" onclick="window.location = '${sandboxLink}'">View records</button>
+                    <g:if test="${reloadLink && canEdit}">
+                        <button type="submit" class="btn btn-default"
+                                onclick="window.location = '${reloadLink}'">Reload data</button>
+                    </g:if>
+                    <g:if test="${deleteLink && canEdit}">
+                        <form method="POST"  action="${deleteLink}" class="form-inline-block">
+                            <button type="submit" class="btn btn-default btn-danger">Delete</button>
+                        </form>
+                    </g:if>
+                </div>
             </div>
-        </div>
-        <br>
+            <br>
 
-        <div class="row">
-            <div class="col-sm-12">
-                <p>Do you want this data to be shared on the Atlas of Living Australia?</p>
-                <button type="submit" class="btn btn-default" ${canSubmitForReview ?: 'disabled'}
-                        onclick="window.location =
-                                '${createLink(controller: 'tempDataResource', action: 'submitDataForReview', params: [uid: uid])}'">
-                    Submit for review
-                </button>
+            <div class="row">
+                <div class="col-sm-12">
+                    <p>Do you want this data to be shared on the Atlas of Living Australia?</p>
+                    <button type="submit" class="btn btn-default" ${canSubmitForReview ?: 'disabled'}
+                            onclick="window.location =
+                                    '${createLink(controller: 'tempDataResource', action: 'submitDataForReview', params: [uid: uid])}'">
+                        Submit for review
+                    </button>
+                </div>
             </div>
-        </div>
+        </g:if>
         <g:if test="${isAdmin}">
             <br>
 
