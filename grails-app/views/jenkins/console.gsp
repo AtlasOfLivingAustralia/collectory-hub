@@ -34,24 +34,30 @@
     <li class="active">Jenkins console</li>
 </ol>
 
-<div class="panel">
+<div class="panel console-top">
     <div class="panel-body console console-height">
-        <pre id="console-output" class="borderless console"><g:if test="${text}">${text}</g:if></pre>
+        <a class="pull-right btn btn-default btn-sm" href="#" onclick="setFollow(true)">Follow log</a>
+        <pre id="console-output" class="borderless console" ><g:if test="${text}">${text}</g:if></pre>
         <div class="row hide" id="console-loading">
             <div class="col-sm-12">
                 <i class="fa fa-cog fa-2x fa-spin"><span class="sr-only">Loading...</span></i>
             </div>
         </div>
+        <a class="pull-right btn btn-default btn-sm" href="#" onclick="reachTop()">Top</a>
+        <div id="last-line">
+        </div>
     </div>
 </div>
-<g:if test="${isMoreData}">
+%{--<g:if test="${isMoreData}">--}%
 <script>
     var url = "${createLink(controller: 'jenkins', action:  'console')}/${jobName}/${buildNumber}/",
-        nextStart = ${nextStart}
+        nextStart = ${nextStart},
+        follow = false,
+        headerHeight = 60;
 
     function fetchMessages() {
         var interimUrl = url + nextStart,
-                delay = 5000
+                delay = 2000
         $.ajax({
             url: interimUrl,
             accepts: {
@@ -60,7 +66,7 @@
             dataType: 'json',
             success: function (data, resp) {
                 $("#console-output").append(data.text)
-                $(window).scrollTop($("#console-loading").offset().top);
+                followLog();
                 if(data.isMoreData){
                     nextStart = data.nextStart
                     $("#console-loading").removeClass('hide')
@@ -72,8 +78,22 @@
         });
     }
 
+    function followLog() {
+        var position = $("#last-line").offset().top - $(window).height()
+        follow && $('html,body').animate({scrollTop:position}, 'slow');
+    }
+
+    function reachTop() {
+        $('html,body').animate({scrollTop:$(".console-top").offset().top - headerHeight}, 'slow');
+    }
+    function setFollow(value) {
+        follow = value
+        followLog()
+        return false
+    }
+
     fetchMessages(nextStart)
 </script>
-</g:if>
+%{--</g:if>--}%
 </body>
 </html>

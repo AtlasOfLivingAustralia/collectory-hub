@@ -34,6 +34,7 @@ grails.project.dependency.resolution = {
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
         compile "commons-httpclient:commons-httpclient:3.1"
+        compile "org.apache.httpcomponents:httpmime:4.3.3"
     }
 
     plugins {

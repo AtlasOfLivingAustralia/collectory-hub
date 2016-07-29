@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2016 Atlas of Living Australia
+ * All Rights Reserved.
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * Created by Temi on 07/2016.
+ */
 package au.org.ala.collectory
 
 import au.org.ala.web.AlaSecured
@@ -5,6 +21,11 @@ import au.org.ala.web.AuthService
 import au.org.ala.web.CASRoles
 import org.apache.commons.httpclient.util.URIUtil
 
+/**
+ * All interactions with Temp Data Resource collectory instance is done through this controller.
+ * Actions like listing all Temp Data Resources and  a list of user uploaded Temp Data Resources is added here.
+ * This controller can view, edit and delete a Temp Data Resource. It can create a Data resource from a Temp Data Resource.
+ */
 class TempDataResourceController {
     AuthService authService
     CollectoryHubRestService collectoryHubRestService
@@ -16,7 +37,7 @@ class TempDataResourceController {
         BootstrapJs.valueOf(grailsApplication.config.bs.version ?: "bs2")
     }
 
-    private checkUserPrivilege() {
+    private Boolean checkUserPrivilege() {
         if (params.uid) {
             String alaId = authService.getUserId()
             params.isAdmin = authService.userInRole(CASRoles.ROLE_ADMIN)
@@ -76,7 +97,7 @@ class TempDataResourceController {
                 login(createLink(action: 'myData', absolute: true))
             }
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error(e.message, e)
             flash.message = message(code: "tempDataResource.myData.exception", default: "An error occured while accessing your datasets.")
             redirect action: 'error'
         }
@@ -105,7 +126,7 @@ class TempDataResourceController {
                     break;
             }
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.adminList.exception", default: "An error occurred while accessing all datasets list.")
             redirect action: 'error'
         }
@@ -144,7 +165,7 @@ class TempDataResourceController {
                 redirect action: 'myData'
             }
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.editMetadata.exception", args: [params.uid], default: "An error occurred while editing dataset {0}.")
             redirect action: 'error'
         }
@@ -194,7 +215,7 @@ class TempDataResourceController {
                 redirect action: 'myData'
             }
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.viewMetadata.exception", default: "An error occurred while viewing dataset {0}.")
             redirect action: 'error'
         }
@@ -248,7 +269,7 @@ class TempDataResourceController {
                 redirect action: 'myData'
             }
         } catch (Exception e) {
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.saveTempDataResource.noPrivilege", args: [params.uid], default: "An error occurred while saving dataset {0}.")
             redirect action: 'error'
         }
@@ -287,8 +308,7 @@ class TempDataResourceController {
                 redirect action: 'myData'
             }
         } catch (Exception e) {
-            log.error(e.message)
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.submitDataForReview.exception", args: [params.uid], default: "And error occured while submitting data from review.")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
@@ -319,8 +339,7 @@ class TempDataResourceController {
                 redirect action: 'myData'
             }
         } catch (Exception e) {
-            log.error(e.message)
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.delete.exception", args: [params.uid], default: "An error occurred while deleting dataset {0}.")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
@@ -350,8 +369,7 @@ class TempDataResourceController {
                 redirect action: 'myData'
             }
         } catch (Exception e) {
-            log.error(e.message)
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.reload.exception", args: [params.uid], default: "An error occurred while rewriting dataset {0}.")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
@@ -385,8 +403,7 @@ class TempDataResourceController {
                 redirect(action: 'adminList')
             }
         } catch (Exception e) {
-            log.error(e.message)
-            e.printStackTrace()
+            log.error (e.message, e)
             flash.message = message(code: "tempDataResource.decline.exception", args: [params.uid], default: "And error occurred while declining dataset {0}.")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
@@ -420,6 +437,7 @@ class TempDataResourceController {
                 redirect(action: 'viewMetadata', params: [uid: params.uid])
             }
         } catch (Exception e) {
+            log.error(e.message, e)
             flash.message = message(code: "tempDataResource.loadToProduction.exception", default: "An error occurred while loading dataset to production.")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
@@ -451,6 +469,7 @@ class TempDataResourceController {
                 redirect(action: 'myData')
             }
         } catch (Exception e) {
+            log.error(e.message, e)
             flash.message = message(code: "tempDataResource.testRun.exception", default: "An error occurred while doing a test run.")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
@@ -473,6 +492,7 @@ class TempDataResourceController {
                 redirect(action: 'myData')
             }
         } catch (Exception e) {
+            log.error(e.message, e)
             flash.message = message(code: "tempDataResource.resetStatus.exception", default: "An error occurred while resetting dataset status.")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }
@@ -505,6 +525,7 @@ class TempDataResourceController {
                 redirect(action: 'myData')
             }
         } catch (Exception e) {
+            log.error(e.message, e)
             flash.message = message(code: "tempDataResource.createDr.exception", default: "An error occurred while creating a new data resource")
             redirect(action: 'viewMetadata', params: [uid: params.uid])
         }

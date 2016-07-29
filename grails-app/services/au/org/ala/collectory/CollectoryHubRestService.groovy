@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015 Atlas of Living Australia
+ * Copyright (c) 2016 Atlas of Living Australia
  * All Rights Reserved.
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,6 +24,9 @@ import org.apache.commons.httpclient.util.URIUtil
 import javax.annotation.PostConstruct
 import java.text.SimpleDateFormat
 
+/**
+ * Helper funcitons to interacting with collectory for entities like temp data resource and data resource.
+ */
 class CollectoryHubRestService {
     def grailsApplication
     WebService webService
@@ -61,8 +64,14 @@ class CollectoryHubRestService {
                 break;
         }
 
+        Map results
+        Map result = webService.get(url)
+        if(result.statusCode in [200, 201]){
+            results = result.resp?:[:]
+        } else {
+            throw new Exception("Could not get temp data resource for user ${currentUserId}")
+        }
 
-        Map results = webService.get(url)?.resp?:[:]
         // get data resource ids
         List drs = getDataResourceIdFromResult(results)
         // get data resource id details from collectory
@@ -89,7 +98,12 @@ class CollectoryHubRestService {
      */
     @Cacheable('longTermCache')
     List getDataResourcesFromCollectory(String url){
-        webService.get(url)?.resp?:[]
+        Map result = webService.get(url)
+        if(result.statusCode in [200, 201]){
+            result.resp
+        } else {
+            throw new Exception("Could not get temp data resource for user ${currentUserId}")
+        }
     }
 
     /**
@@ -134,17 +148,18 @@ class CollectoryHubRestService {
      * @return
      */
     Map getDataResource(String id){
-        Map resource
         Map resultResource =  webService.get("${COLLECTIONS_BASE_URL}/ws/dataResource/${id}")
         if(!resultResource.error){
+            Map resource
             resource = resultResource.resp
             String contractsUrl = "${COLLECTIONS_BASE_URL}/ws/dataResource/${id}/contact.json"
             Map result = webService.get(contractsUrl)
             List contacts = result?.resp?:[]
             resource.put('contacts',contacts)
+            resource
+        } else {
+            throw new Exception(resultResource.error)
         }
-
-        resource
     }
 
     /**
@@ -153,17 +168,19 @@ class CollectoryHubRestService {
      * @return
      */
     Map getInstitution(String id){
-        Map resource
         Map result = webService.get("${COLLECTIONS_BASE_URL}/ws/institution/${id}")
         if(!result.error){
+            Map resource
             resource =  result.resp;
             String contractsUrl = "${COLLECTIONS_BASE_URL}/ws/institution/${id}/contact.json"
             Map resultContacts = webService.get(contractsUrl)
             List contacts = resultContacts?.resp?:[];
             resource.put('contacts',contacts)
+            resource
+        } else {
+            throw new Exception(result.error)
         }
 
-        resource
     }
 
 
@@ -196,7 +213,7 @@ class CollectoryHubRestService {
             tempMeta = cleanTempDateResource(tempMeta)
             preFillSystemDetails(tempMeta)
         } else {
-            return null
+            throw new Exception("Could not find temp data resource ${uid}")
         }
     }
 
@@ -208,7 +225,11 @@ class CollectoryHubRestService {
     public Map getTempDataResourceFromCollectory(String uid) {
         String url = "${grailsApplication.config.collectoryUrl}/tempDataResource?uid=${uid}"
         Map result = webService.get(url)
-        result.resp ?: [:]
+        if(result.statusCode in [200, 201]){
+            result.resp
+        } else {
+            throw new Exception("Could not get temp data resource ${uid}")
+        }
     }
 
     /**
@@ -404,7 +425,7 @@ class CollectoryHubRestService {
 
             result
         } else {
-            [ error:true, message: 'Could not load to production. No data loaded.' ]
+            throw new Exception("Could not load to production. No data loaded.")
         }
     }
 
@@ -557,15 +578,9 @@ class CollectoryHubRestService {
      * @return
      */
     Boolean isDataSubmittedForTempDataResource(String uid){
-        try {
-            String url = "${grailsApplication.config.grails.serverURL}/dataCheck/serveFile?uid=${uid}"
-            Map result = collectoryHubService.doHead(url)
-            return  result.status in [200, 201]
-        } catch (Exception e) {
-            log.error(e)
-            e.printStackTrace()
-            return false
-        }
+        String url = "${grailsApplication.config.grails.serverURL}/dataCheck/serveFile?uid=${uid}"
+        Map result = collectoryHubService.doHead(url)
+        return  result.status in [200, 201]
     }
 
     /**
@@ -655,6 +670,8 @@ class CollectoryHubRestService {
         Map result = webService.get(url)
         if(result.status in [200, 2001]){
             return result.resp
+        } else {
+            throw new Exception("Could not get contact with email ${email}")
         }
     }
 
@@ -666,8 +683,10 @@ class CollectoryHubRestService {
     Map createContact(Map props){
         String url = "${grailsApplication.config.collectoryUrl}/contacts/"
         Map result = collectoryHubService.doPost(url, props)
-        if(result.resp){
+        if(result.status in [200, 201]){
             return  JSON.parse(result.resp)
+        } else {
+            throw new Exception("Could not create contact")
         }
     }
 
