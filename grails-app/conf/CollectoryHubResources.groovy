@@ -91,4 +91,8 @@ modules = {
     datadumper {
         resource url: 'js/third-party/datadumper/datadumper.js'
     }
+
+    console {
+        resource url: [ dir: 'js', file: 'console.js', plugin: 'collectory-hub']
+    }
 }

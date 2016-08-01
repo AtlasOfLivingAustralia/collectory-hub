@@ -22,8 +22,7 @@
     <title>Console | ${grailsApplication.config.skin.appName} | ${grailsApplication.config.skin.orgNameLong}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
-    <r:require module="commonStyles"></r:require>
-    %{--<link href="${resource(dir:"css", file:"temp-style.css", plugin:"collectory-hub")}" type="text/css" rel="stylesheet"/>--}%
+    <r:require modules="commonStyles, console"></r:require>
 </head>
 
 <body>
@@ -36,15 +35,17 @@
 
 <div class="panel console-top">
     <div class="panel-body console console-height">
-        <a class="pull-right btn btn-default btn-sm" href="#" onclick="setFollow(true)">Follow log</a>
-        <pre id="console-output" class="borderless console" ><g:if test="${text}">${text}</g:if></pre>
-        <div class="row hide" id="console-loading">
-            <div class="col-sm-12">
-                <i class="fa fa-cog fa-2x fa-spin"><span class="sr-only">Loading...</span></i>
+        <div id="console-content">
+            <a class="pull-right btn btn-default btn-sm" id="follow" href="#" onclick="">Follow log</a>
+            <pre id="console-output" class="borderless console" ><g:if test="${text}">${text}</g:if></pre>
+            <div id="last-line">
             </div>
-        </div>
-        <a class="pull-right btn btn-default btn-sm" href="#" onclick="reachTop()">Top</a>
-        <div id="last-line">
+            <div class="row hide" id="console-loading">
+                <div class="col-sm-12">
+                    <i class="fa fa-cog fa-2x fa-spin"><span class="sr-only">Loading...</span></i>
+                </div>
+            </div>
+            <a id="top" class="pull-right btn btn-default btn-sm" href="#">Top</a>
         </div>
     </div>
 </div>
@@ -54,45 +55,15 @@
         nextStart = ${nextStart},
         follow = false,
         headerHeight = 60;
-
-    function fetchMessages() {
-        var interimUrl = url + nextStart,
-                delay = 2000
-        $.ajax({
-            url: interimUrl,
-            accepts: {
-                json: 'application/json'
-            },
-            dataType: 'json',
-            success: function (data, resp) {
-                $("#console-output").append(data.text)
-                followLog();
-                if(data.isMoreData){
-                    nextStart = data.nextStart
-                    $("#console-loading").removeClass('hide')
-                    setTimeout(fetchMessages, delay)
-                } else{
-                    $("#console-loading").addClass('hide')
-                }
-            }
+    $(document).ready(function () {
+        fetchMessages(nextStart)
+        $(window).scroll(function () {
+            followButtonPosition()
+            topButtonPosition()
         });
-    }
-
-    function followLog() {
-        var position = $("#last-line").offset().top - $(window).height()
-        follow && $('html,body').animate({scrollTop:position}, 'slow');
-    }
-
-    function reachTop() {
-        $('html,body').animate({scrollTop:$(".console-top").offset().top - headerHeight}, 'slow');
-    }
-    function setFollow(value) {
-        follow = value
-        followLog()
-        return false
-    }
-
-    fetchMessages(nextStart)
+        $('#top').on('click', reachTop)
+        $('#follow').on('click', setFollow)
+    })
 </script>
 %{--</g:if>--}%
 </body>
