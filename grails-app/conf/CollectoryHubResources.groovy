@@ -20,8 +20,8 @@ modules = {
     }
 
     collectory {
-        dependsOn 'commonStyles', 'jquery', 'jquery_i18n', 'jquery_json', 'jquery_tools', 'jquery_jsonp', 'bootstrap2'
-        resource url: 'js/collectory.js'
+        dependsOn 'commonStyles', 'jquery', 'jquery_i18n', 'jquery_json', 'jquery_tools', 'jquery_jsonp', 'bootstrap2', 'commonStyles'
+        resource url: [dir: 'js', file:'collectory.js', plugin: 'collectory-hub']
     }
 
     bootstrap2 {
@@ -32,41 +32,41 @@ modules = {
     }
 
     jquery_i18n {
-        resource url: 'js/jquery.i18n.properties-1.0.9.min.js'
+        resource url: [dir:'js', file: 'jquery.i18n.properties-1.0.9.min.js', plugin: 'collectory-hub']
     }
 
     jquery_json {
-        resource url: 'js/jquery.json-2.2.min.js'
+        resource url: [dir:'js', file:'jquery.json-2.2.min.js', plugin: 'collectory-hub']
     }
 
     jquery_tools {
-        resource url: 'js/jquery.tools.min.js'
+        resource url: [dir: 'js', file:'jquery.tools.min.js', plugin: 'collectory-hub']
     }
 
     jquery_jsonp {
-        resource url: 'js/jquery.jsonp-2.1.4.min.js'
+        resource url: [dir: 'js', file:'jquery.jsonp-2.1.4.min.js', plugin: 'collectory-hub']
     }
 
     bbq {
-        resource url: [dir: 'js', file: 'jquery.ba-bbq.min.js']
+        resource url: [dir: 'js', file: 'jquery.ba-bbq.min.js', plugin: 'collectory-hub']
     }
 
     rotate {
-        resource url: 'js/jQueryRotateCompressed.2.1.js'
+        resource url: [ dir:'js', file: 'jQueryRotateCompressed.2.1.js', plugin: 'collectory-hub']
     }
 
     pagination {
-        resource url: 'css/pagination.css'
+        resource url: [dir:'css', file: 'pagination.css', plugin: 'collectory-hub']
     }
 
     bootstrapSwitch {
         dependsOn 'bootstrap2', 'jquery'
-        resource url: [dir: 'css', file: 'bootstrap-switch.css']
-        resource url: [dir: 'js', file: 'bootstrap-switch.min.js']
+        resource url: [dir: 'css', file: 'bootstrap-switch.css', plugin: 'collectory-hub']
+        resource url: [dir: 'js', file: 'bootstrap-switch.min.js', plugin: 'collectory-hub']
     }
 
     datasets {
-        resource url: 'js/datasets.js'
+        resource url: [dir:  'js', file: 'datasets.js', plugin: 'collectory-hub']
     }
 
     fancybox {
@@ -75,24 +75,24 @@ modules = {
     }
 
     jstree {
-        resource url: 'js/third-party/jstree/jquery.jstree.js'
-        resource url: 'js/third-party/themes/classic/style.css', attrs:[media:'screen, projection, print']
+        resource url: [dir: 'js/third-party/jstree/', file: 'jquery.jstree.js', plugin: 'collectory-hub']
+        resource url: [dir:'js/third-party/themes/classic/', file: 'style.css', plugin: 'collectory-hub'], attrs:[media:'screen, projection, print']
     }
 
     jquery_ui_custom {
-        resource url: 'js/third-party/jquery-ui/jquery-ui-1.11.2-no-autocomplete.js'
+        resource url: [dir: 'js/third-party/jquery-ui/', file: 'jquery-ui-1.11.2-no-autocomplete.js', plugin: 'collectory-hub']
     }
 
     charts {
-        resource url:'js/charts2.js'
-        resource url:'js/charts.js'
+        resource url: [ dir:'js/', file: 'charts2.js', plugin: 'collectory-hub']
+        resource url: [dir: 'js/', file: 'charts.js', plugin: 'collectory-hub']
     }
 
     datadumper {
-        resource url: 'js/third-party/datadumper/datadumper.js'
+        resource url: [dir: 'js/third-party/datadumper/', file: 'datadumper.js', plugin: 'collectory-hub']
     }
 
     console {
-        resource url: [ dir: 'js', file: 'console.js', plugin: 'collectory-hub']
+        resource url: [dir: 'js', file: 'console.js', plugin: 'collectory-hub']
     }
 }

@@ -50,7 +50,7 @@ function loadResources(serverUrl, biocacheRecordsUrl, externalResourceUrl, sourc
     baseUrl = serverUrl;
     biocacheUrl = biocacheRecordsUrl;
     collectionsUrl = externalResourceUrl;
-    $.getJSON(baseUrl + "/datasets/resources?source="+source, function(data) {
+    $.getJSON(baseUrl + "/collectory/resources?source="+source, function(data) {
         allResources = data;
         // no filtering at this stage
         resources = allResources;
@@ -117,7 +117,7 @@ function appendResource(value) {
 
     // row A
     $rowA.append('<img title="'+ jQuery.i18n.prop('datasets.js.appendresource01') + '" src="' + baseUrl + '/images/skin/ExpandArrow.png"/>');  // twisty
-    $rowA.append('<span class="result-name"><a title="' + jQuery.i18n.prop('datasets.js.appendresource02') + '" href="' + collectionsUrl + '/datasets/showDataResource/' + value.uid + '">' + value.name + '</a></span>'); // name
+    $rowA.append('<span class="result-name"><a title="' + jQuery.i18n.prop('datasets.js.appendresource02') + '" href="' + collectionsUrl + '/collectory/showDataResource/' + value.uid + '">' + value.name + '</a></span>'); // name
     $rowA.find('a').tooltip(tooltipOptions);
     $rowA.find('img').tooltip($.extend({},tooltipOptions,{position:'center left'}));
 
@@ -231,7 +231,7 @@ function filterList() {
         });
         // do search
         console.log('Doing a search with query: ' + query);
-        $.ajax({url: baseUrl + "/datasets/dataSetSearch?q=" + query,
+        $.ajax({url: baseUrl + "/collectory/dataSetSearch?q=" + query,
             beforeSend: function(){
                 status(true);
             },

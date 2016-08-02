@@ -306,7 +306,7 @@ ul.pagination-control{
     margin: 0px;
 }
 
-#follow{
+#follow.console-follow{
     position: absolute;
     top: 0px;
     right: 0px;
@@ -314,7 +314,7 @@ ul.pagination-control{
     margin-right: 10px;
 }
 
-#top{
+#top.console-top{
     position: absolute;
     bottom: 0px;
     right: 0px;

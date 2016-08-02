@@ -23,7 +23,7 @@
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <title><ch:pageTitle>${instance.name}</ch:pageTitle></title>
     <script type="text/javascript" language="javascript" src="http://www.google.com/jsapi"></script>
-    <r:require modules="jquery, fancybox, jquery_jsonp, charts, collectory"/>
+    <r:require modules="jquery, fancybox, jquery_jsonp, charts, collectory, commonStyles"/>
     <r:script type="text/javascript" disposition="head">
       biocacheServicesUrl = "${grailsApplication.config.biocacheServicesUrl}";
       biocacheWebappUrl = "${grailsApplication.config.grails.serverURL}";

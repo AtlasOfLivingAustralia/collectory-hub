@@ -36,7 +36,7 @@
 <div class="panel console-top">
     <div class="panel-body console console-height">
         <div id="console-content">
-            <a class="pull-right btn btn-default btn-sm" id="follow" href="#" onclick="">Follow log</a>
+            <a class="pull-right btn btn-default btn-sm console-follow" id="follow" href="#" onclick="">Follow log</a>
             <pre id="console-output" class="borderless console" ><g:if test="${text}">${text}</g:if></pre>
             <div id="last-line">
             </div>
@@ -45,7 +45,7 @@
                     <i class="fa fa-cog fa-2x fa-spin"><span class="sr-only">Loading...</span></i>
                 </div>
             </div>
-            <a id="top" class="pull-right btn btn-default btn-sm" href="#">Top</a>
+            <a id="top" class="pull-right btn btn-default btn-sm console-top" href="#">Top</a>
         </div>
     </div>
 </div>

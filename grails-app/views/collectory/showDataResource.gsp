@@ -45,7 +45,7 @@
             });
         });
     </r:script>
-    <r:require modules="collectory"></r:require>
+    <r:require modules="collectory, commonStyles"></r:require>
     <r:require modules="jquery, fancybox, jquery_jsonp, jstree, jquery_ui_custom, charts, datadumper"/>
 </head>
 <body class="nav-datasets">
@@ -344,7 +344,8 @@
           dataHubFq:"fq=${grailsApplication.config.hub.queryContext}",
           </g:if>
           /* a uid or list of uids to chart - either this or query must be present */
-          instanceUid: "${instance.uid}"
+          instanceUid: "${instance.uid}",
+          resourceUrl: "${resource(dir:'js/third-party/themes/classic/', file:'style.css', plugin: 'collectory-hub')}"
       }
 
       /************************************************************\
@@ -372,21 +373,6 @@
           }
       }
 
-      // species pages
-      $.ajax({
-          url: bieUrl + "/search.json?q=*&fq=uid:${instance.uid}",
-          dataType: 'jsonp',
-          success: function(data) {
-              var pages = data.searchResults.totalRecords;
-              if (pages) {
-                  var $contrib = $('#pagesContributed');
-                  $contrib.append($('<h2>Contribution to the Atlas</h2><p>This resource has contributed to <strong>' +
-                      pages + '</strong> pages of taxa. ' +
-                      '<a href="' + bieUrl + '/search?q=*&fq=uid:' + "${instance.uid}" + '">View a list</a></p>'));
-              }
-          }
-      });
-debugger;
       // records
       if (${instance.resourceType == 'records'}) {
           // summary biocache data
