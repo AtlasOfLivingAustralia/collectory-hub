@@ -26,7 +26,7 @@
     <r:require modules="jquery_json, bbq, rotate, jquery_tools, pagination, bootstrapSwitch, datasets"/>
     <g:set var="defaultSource" value="hub"></g:set>
     <script type="text/javascript">
-        var altMap = true;
+        var altMap = true, hubSource = "${defaultSource}";
         $(document).ready(function() {
 //            $('#nav-tabs > ul').tabs();
             loadResources("${grailsApplication.config.grails.serverURL}","${grailsApplication.config.contextPath}","${grailsApplication.config.grails.serverURL}", '${defaultSource}');
@@ -48,8 +48,10 @@
                 onSwitchChange: function(event, state) {
                     if (!state) {
                         // hub visible
+                        hubSource = 'hub'
                         loadResources("${grailsApplication.config.grails.serverURL}","${grailsApplication.config.biocache.url}","${grailsApplication.config.collections.baseUrl}", 'hub')
                     } else {
+                        hubSource = 'all'
                         loadResources("${grailsApplication.config.grails.serverURL}","${grailsApplication.config.biocache.url}","${grailsApplication.config.collections.baseUrl}", 'all')
                     }
                 }

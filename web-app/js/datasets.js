@@ -231,7 +231,7 @@ function filterList() {
         });
         // do search
         console.log('Doing a search with query: ' + query);
-        $.ajax({url: baseUrl + "/collectory/dataSetSearch?q=" + query,
+        $.ajax({url: baseUrl + "/collectory/dataSetSearch?q=" + query+ "&source=" + hubSource,
             beforeSend: function(){
                 status(true);
             },
