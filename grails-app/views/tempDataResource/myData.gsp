@@ -47,8 +47,7 @@
             </div>
 
             <div class="col-sm-3">
-                <a class="btn btn-primary pull-right"
-                   onclick="window.location = '${createLink(uri:'/')}'">Add new dataset</a>
+                <g:link uri="/" class="btn btn-primary pull-right">Add new dataset</g:link>
             </div>
         </div>
 

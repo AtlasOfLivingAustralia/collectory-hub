@@ -69,7 +69,7 @@ class CollectoryHubRestService {
         if(result.statusCode in [200, 201]){
             results = result.resp?:[:]
         } else {
-            throw new Exception("Could not get temp data resource for user ${currentUserId}")
+            throw new RuntimeException("Could not get temp data resource for user ${currentUserId}")
         }
 
         // get data resource ids
@@ -102,7 +102,7 @@ class CollectoryHubRestService {
         if(result.statusCode in [200, 201]){
             result.resp
         } else {
-            throw new Exception("Could not get temp data resource for user ${currentUserId}")
+            throw new RuntimeException("Could not get temp data resource for user ${currentUserId}")
         }
     }
 
@@ -158,7 +158,7 @@ class CollectoryHubRestService {
             resource.put('contacts',contacts)
             resource
         } else {
-            throw new Exception(resultResource.error)
+            throw new RuntimeException(resultResource.error)
         }
     }
 
@@ -178,7 +178,7 @@ class CollectoryHubRestService {
             resource.put('contacts',contacts)
             resource
         } else {
-            throw new Exception(result.error)
+            throw new RuntimeException(result.error)
         }
 
     }
@@ -197,7 +197,7 @@ class CollectoryHubRestService {
         if(result.statusCode in [200, 201]){
             result.resp
         } else {
-            throw new Exception("Could not get temp data resource for user ${currentUserId}")
+            throw new RuntimeException("Could not get temp data resource for user ${currentUserId}")
         }
     }
 
@@ -213,7 +213,7 @@ class CollectoryHubRestService {
             tempMeta = cleanTempDateResource(tempMeta)
             preFillSystemDetails(tempMeta)
         } else {
-            throw new Exception("Could not find temp data resource ${uid}")
+            throw new RuntimeException("Could not find temp data resource ${uid}")
         }
     }
 
@@ -228,7 +228,7 @@ class CollectoryHubRestService {
         if(result.statusCode in [200, 201]){
             result.resp
         } else {
-            throw new Exception("Could not get temp data resource ${uid}")
+            throw new RuntimeException("Could not get temp data resource ${uid}")
         }
     }
 
@@ -414,7 +414,7 @@ class CollectoryHubRestService {
             if(indexResult.status in [200,201]){
                 Map jenkinsResult = grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([status: 'queuedForLoading'], uid)
                 if(!(jenkinsResult.status in [200,201])){
-                    throw new Exception("Error loading data to production. Error occurred while updating temp data resource.")
+                    throw new RuntimeException("Error loading data to production. Error occurred while updating temp data resource.")
                 }
             }
 
@@ -425,7 +425,7 @@ class CollectoryHubRestService {
 
             result
         } else {
-            throw new Exception("Could not load to production. No data loaded.")
+            throw new RuntimeException("Could not load to production. No data loaded.")
         }
     }
 
@@ -442,14 +442,14 @@ class CollectoryHubRestService {
             Map result = createOrSaveDataResource(drt.prodUid, dr)
             String newDrId = result.uid, drId = newDrId?:drt.prodUid
             if(!(result.status in [200, 201])){
-                throw new Exception("An error occurred while creating new data resource.")
+                throw new RuntimeException("An error occurred while creating new data resource.")
             } else {
                 if(newDrId){
                     Map updatingTempDR = grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([prodUid: newDrId], uid)
                     if(!(updatingTempDR.status in [200, 201])){
                         // roll back created data resource
                         deleteDataResource(newDrId)
-                        throw new Exception("Error saving data resource uid to collectory. Error occurred while updating temp data resource.")
+                        throw new RuntimeException("Error saving data resource uid to collectory. Error occurred while updating temp data resource.")
                     }
                 }
             }
@@ -485,7 +485,7 @@ class CollectoryHubRestService {
                 result.uid = drId
             }
         } else {
-            throw new Exception("Error loading data to production. Error occurred while creating data resource in collectory.")
+            throw new RuntimeException("Error loading data to production. Error occurred while creating data resource in collectory.")
         }
 
         result
@@ -653,7 +653,7 @@ class CollectoryHubRestService {
             if(contact.id){
                 return contact.id
             } else {
-                throw new Exception("Could not create a contact for user.")
+                throw new RuntimeException("Could not create a contact for user.")
             }
         }
 
@@ -668,10 +668,13 @@ class CollectoryHubRestService {
     Map getContact(String email){
         String url = "${grailsApplication.config.collectoryUrl}/contacts/email/${email}"
         Map result = webService.get(url)
-        if(result.status in [200, 2001]){
+        if (result.statusCode in [200,201]) {
             return result.resp
+        } else if (result.statusCode == 404) {
+            return [:] // ~= null object
         } else {
-            throw new Exception("Could not get contact with email ${email}")
+            log.warn("Got error trying to retrieve $url: ${result}")
+            throw new RuntimeException("Could not get contact with email ${email}")
         }
     }
 
@@ -686,7 +689,7 @@ class CollectoryHubRestService {
         if(result.status in [200, 201]){
             return  JSON.parse(result.resp)
         } else {
-            throw new Exception("Could not create contact")
+            throw new RuntimeException("Could not create contact")
         }
     }
 
@@ -714,7 +717,7 @@ class CollectoryHubRestService {
     Map resetStatus(String uid){
         Map result = grailsApplication.mainContext.collectoryHubRestService.saveTempDataResource([status: 'draft'], uid)
         if(!(result.status in [200, 201])){
-            throw new Exception("An error occurred while reseting status")
+            throw new RuntimeException("An error occurred while reseting status")
         }
 
         result
