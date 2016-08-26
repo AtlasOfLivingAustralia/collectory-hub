@@ -46,6 +46,7 @@ grails.project.dependency.resolution = {
         compile ":cache-ehcache:1.0.0"
         compile ":cache:1.1.8"
         compile ":ala-ws-plugin:1.0"
+        compile ":ala-auth:1.3.4"
         compile ":jquery:1.11.1"
 
         runtime ":pretty-time:2.1.3.Final-1.0.1"
