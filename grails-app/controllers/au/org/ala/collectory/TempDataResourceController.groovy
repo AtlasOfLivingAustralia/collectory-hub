@@ -119,7 +119,6 @@ class TempDataResourceController {
         //retrieve the current chart options
         //retrieve the list of custom indexes...
 
-        log.debug("Origin: ${params.origin}")
         def metadata = collectoryHubRestService.getTempDataResourceFromCollectory(params.tempUid)
         def customIndexes = biocacheRestService.getCustomIndexes(params.tempUid)
         def chartConfig = biocacheRestService.getChartOptions(params.tempUid)
@@ -139,7 +138,7 @@ class TempDataResourceController {
             cfg.formattedField = formatService.formatFieldName(cfg.field)
         }
 
-        def instance = [metadata: metadata, chartConfig: chartConfig, tempUid: params.tempUid]
+        def instance = [metadata: metadata, chartConfig: chartConfig, tempUid: params.tempUid, origin: params.origin]
         respond(instance, view:"chartOptions", model: instance)
     }
 
@@ -174,6 +173,7 @@ class TempDataResourceController {
                 ]
             }
         }
+
         def uid = params.tempUid
         log.debug("Saving chart options for $uid: $chartOptions")
         def status = [status: biocacheRestService.saveChartOptions(uid, chartOptions)]
