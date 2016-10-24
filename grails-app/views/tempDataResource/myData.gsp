@@ -89,7 +89,7 @@
                                             class="icon-th-list"></i> View records</a>
 
                                     <g:if test="${!grailsApplication.config.sandbox.hideCharts.toBoolean()}">
-                                        <g:link class="btn btn-default" controller="myDatasets" action="chartOptions"
+                                        <g:link class="btn btn-default" controller="tempDataResource" action="chartOptions"
                                                 params="${[tempUid: userUpload.uid]}">
                                             <i class="icon-cog"></i> Configure charts
                                         </g:link>

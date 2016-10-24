@@ -31,6 +31,9 @@ class TempDataResourceController {
     CollectoryHubRestService collectoryHubRestService
     CollectoryHubJenkinsService collectoryHubJenkinsService
 
+    BiocacheRestService biocacheRestService
+    FormatService formatService
+
     def beforeInterceptor = [action: this.&checkUserPrivilege]
 
     BootstrapJs getBsVersion() {
@@ -100,6 +103,88 @@ class TempDataResourceController {
             log.error(e.message, e)
             flash.message = message(code: "tempDataResource.myData.exception", default: "An error occured while accessing your datasets.")
             redirect action: 'error'
+        }
+    }
+
+
+    def adminChartOptions () {
+        params.origin = 'adminList'
+        forward(action: 'chartOptions', params: params)
+    }
+    /**
+     * Retrieves data set chart configuration
+     */
+
+    def chartOptions(){
+        //retrieve the current chart options
+        //retrieve the list of custom indexes...
+
+        def metadata = collectoryHubRestService.getTempDataResourceFromCollectory(params.tempUid)
+        def customIndexes = biocacheRestService.getCustomIndexes(params.tempUid)
+        def chartConfig = biocacheRestService.getChartOptions(params.tempUid)
+
+        if(!chartConfig){
+            chartConfig = []
+            customIndexes.each {
+                chartConfig << [
+                        field: it,
+                        format: 'pie',
+                        visible: true
+                ]
+            }
+        }
+
+        chartConfig.each { cfg ->
+            cfg.formattedField = formatService.formatFieldName(cfg.field)
+        }
+
+        def instance = [metadata: metadata, chartConfig: chartConfig, tempUid: params.tempUid, origin: params.origin]
+        respond(instance, view:"chartOptions", model: instance)
+    }
+
+    /**
+     * Save new data set chart configuration
+     * @return
+     */
+    def saveChartOptions(){
+
+        def chartOptions = []
+        if (request.contentType?.startsWith('application/json')) {
+            chartOptions = request.getJSON()
+        } else { // form encoded
+            def fields = params.field
+            def format = params.format
+
+            fields.eachWithIndex { field, idx ->
+
+                def visibleFlag = 'visible_' + idx
+                def values = params[visibleFlag]
+                def visible = {
+                    if(values instanceof String[]){
+                        true
+                    } else {
+                        false
+                    }
+                }.call()
+                chartOptions << [
+                        field: field,
+                        format: format[idx],
+                        visible: visible
+                ]
+            }
+        }
+
+        def uid = params.tempUid
+        log.debug("Saving chart options for $uid: $chartOptions")
+        def status = [status: biocacheRestService.saveChartOptions(uid, chartOptions)]
+
+        String action =  params.origin != 'adminList'? 'myData' : 'adminList'
+
+        request.withFormat {
+            form multipartForm {
+                redirect( controller: "tempDataResource", action: action, method: 'GET')
+            }
+            '*'{ respond status }
         }
     }
 
