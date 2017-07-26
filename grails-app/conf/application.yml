@@ -1,0 +1,12 @@
+---
+grails:
+    profile: web-plugin
+    codegen:
+        defaultPackage: au.org.ala.collectory
+
+info:
+    app:
+        name: '@info.app.name@'
+        version: '@info.app.version@'
+        grailsVersion: '@info.app.grailsVersion@'
+

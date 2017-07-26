@@ -5,8 +5,9 @@
 
         <a href="${grailsApplication.config.grails.serverURL}/occurrences/search?q=${facet}:${instance.uid}&fq=${grailsApplication.config.hub.queryContext}" class="btn"><i class="icon icon-list"></i> <g:message code="dataAccess.view.records"/></a>
 
-        <g:if test="${!grailsApplication.config.disableLoggerLinks.toBoolean() && grailsApplication.config.loggerURL}">
-            <a href="${grailsApplication.config.loggerURL}/reasonBreakdownCSV?eventId=1002&entityUid=${instance.uid}" class="btn"><i class="icon icon-download-alt"></i> <g:message code="dataAccess.download.stats"/></a>
+        <g:if test="${!grailsApplication.config.disableLoggerLinks.toBoolean() && grailsApplication.config.logger.baseURL}">
+            <a href="${grailsApplication.config.logger.baseURL}/reasonBreakdownCSV?eventId=1002&entityUid=${instance.uid}"
+               class="btn"><i class="icon icon-download-alt"></i> <g:message code="dataAccess.download.stats"/></a>
         </g:if>
 
         <ch:createNewRecordsAlertsLink query="${facet}:${instance.uid}" displayName="${instance.name}"

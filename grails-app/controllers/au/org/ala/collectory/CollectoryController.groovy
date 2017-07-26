@@ -21,25 +21,13 @@ import org.apache.http.HttpStatus
 
 class CollectoryController {
     CollectoryHubRestService collectoryHubRestService
-    def grailsApplication
-
-    BootstrapJs getBsVersion() {
-        BootstrapJs.valueOf(grailsApplication.config.bs.version ?: "bs2")
-    }
 
     /**
      * Render page to list data resources
      * @return
      */
     def list() {
-        switch (bsVersion) {
-            case BootstrapJs.bs2:
-                render view: 'list'
-                break
-            case BootstrapJs.bs3:
-                render text: "The system does not have a bootstrap 3 version of the requested page"
-                break
-        }
+        render view: 'list'
     }
 
     /**
@@ -48,7 +36,7 @@ class CollectoryController {
      * @return
      */
     def resources() {
-        List drs;
+        List drs
         String source = params.source ?: 'hub'
         drs = collectoryHubRestService.getDataResources(source)
         render text: drs as JSON, contentType: 'application/json'
@@ -63,7 +51,7 @@ class CollectoryController {
     def dataSetSearch() {
         String source = params.source ?: 'hub'
         String query = params.q ?: ''
-        List drs = collectoryHubRestService.getFilteredDataResources(query, source);
+        List drs = collectoryHubRestService.getFilteredDataResources(query, source)
         render drs as JSON
     }
 
@@ -76,14 +64,7 @@ class CollectoryController {
         String id = params.id
         if (id) {
             Map instance = collectoryHubRestService.getDataResource(id)
-            switch (bsVersion) {
-                case BootstrapJs.bs2:
-                    render view: 'showDataResource', model: [instance: instance]
-                    break;
-                case BootstrapJs.bs3:
-                    render text: "The system does not have a bootstrap 3 version of the requested page"
-                    break;
-            }
+            render view: 'showDataResource', model: [instance: instance]
         } else {
             render status: HttpStatus.SC_NOT_FOUND, text: 'Data provider not found'
         }
@@ -98,14 +79,7 @@ class CollectoryController {
         String id = params.id
         if (id) {
             Map instance = collectoryHubRestService.getInstitution(id)
-            switch (bsVersion) {
-                case BootstrapJs.bs2:
-                    render view: 'showInstitution', model: [instance: instance]
-                    break;
-                case BootstrapJs.bs3:
-                    render text: "The system does not have a bootstrap 3 version of the requested page"
-                    break;
-            }
+            render view: 'showInstitution', model: [instance: instance]
         } else {
             render status: HttpStatus.SC_NOT_FOUND, text: 'Data provider not found'
         }

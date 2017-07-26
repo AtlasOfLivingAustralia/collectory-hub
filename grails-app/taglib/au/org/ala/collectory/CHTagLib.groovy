@@ -10,7 +10,6 @@ import java.text.SimpleDateFormat
 class CHTagLib {
 
     static namespace = "ch"
-    def grailsApplication
 
     /**
      * Outputs value/body if one is not blank otherwise outputs the otherwise value if present.
@@ -324,8 +323,8 @@ class CHTagLib {
             link += '?webserviceQuery=/occurrences/search?q=' + attrs.query
             link += '&uiQuery=/occurrences/search?q=' + attrs.query
             link += '&queryDisplayName=' + attrs.displayName
-            link += '&baseUrlForWS=' + grailsApplication.config.biocacheServicesUrl
-            link += '&baseUrlForUI=' + grailsApplication.config.biocacheUiURL
+            link += '&baseUrlForWS=' + grailsApplication.config.biocacheService.baseURL
+            link += '&baseUrlForUI=' + grailsApplication.config.biocache.baseURL
             link += '&resourceName=' + grailsApplication.config.alertResourceName
             out << "<a href=\"" + link +"\" class='btn' alt='"+attrs.altText+"'><i class='icon icon-bell'></i> "+ attrs.linkText + "</a>"
         }
@@ -372,7 +371,7 @@ class CHTagLib {
         else {
             queryStr = fieldNameForSearch(uidStr) + ":" + uidStr
         }
-        return  grailsApplication.config.biocacheUiURL + "/occurrence/search?q=" + queryStr
+        return grailsApplication.config.biocache.baseURL + "/occurrence/search?q=" + queryStr
     }
 
     /**
@@ -396,7 +395,7 @@ class CHTagLib {
      */
     def recordsMapDirect = { attrs ->
         if (attrs.uid) {
-            def urlBase = grailsApplication.config.biocacheServicesUrl + "/density/"
+            def urlBase = grailsApplication.config.biocacheService.baseURL + "/density/"
             def query = "?q=" + fieldNameForSearch(attrs.uid) + ":" + attrs.uid
             out <<
                     "<div class='recordsMap'>" +

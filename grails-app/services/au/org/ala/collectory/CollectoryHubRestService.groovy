@@ -43,7 +43,7 @@ class CollectoryHubRestService {
 
     @PostConstruct
     init(){
-        COLLECTIONS_BASE_URL = grailsApplication.config.collections.baseUrl
+        COLLECTIONS_BASE_URL = grailsApplication.config.collectory.baseURL
     }
 
     /**
@@ -53,15 +53,15 @@ class CollectoryHubRestService {
      */
     @Cacheable('longTermCache')
     List getDataResources(String context){
-        String url;
+        String url
         List drDetails = []
         switch (context){
             case 'all':
-                url = "${grailsApplication.config.biocache.baseUrl}/occurrences/search?q=${URIUtil.encodeWithinQuery(grailsApplication.config.biocache.queryContext)}&facets=data_resource_uid&flimit=1000000"
-                break;
+                url = "${grailsApplication.config.biocache.baseURL}/occurrences/search?q=${URIUtil.encodeWithinQuery(grailsApplication.config.biocache.queryContext)}&facets=data_resource_uid&flimit=1000000"
+                break
             case 'hub':
-                url = "${grailsApplication.config.biocache.baseUrl}/occurrences/search?q=${URIUtil.encodeWithinQuery(grailsApplication.config.hub.queryContext)}&facets=data_resource_uid&flimit=1000000"
-                break;
+                url = "${grailsApplication.config.biocache.baseURL}/occurrences/search?q=${URIUtil.encodeWithinQuery(grailsApplication.config.hub.queryContext)}&facets=data_resource_uid&flimit=1000000"
+                break
         }
 
         Map results
@@ -171,10 +171,10 @@ class CollectoryHubRestService {
         Map result = webService.get("${COLLECTIONS_BASE_URL}/ws/institution/${id}")
         if(!result.error){
             Map resource
-            resource =  result.resp;
+            resource = result.resp
             String contractsUrl = "${COLLECTIONS_BASE_URL}/ws/institution/${id}/contact.json"
             Map resultContacts = webService.get(contractsUrl)
-            List contacts = resultContacts?.resp?:[];
+            List contacts = resultContacts?.resp ?: []
             resource.put('contacts',contacts)
             resource
         } else {
@@ -222,7 +222,7 @@ class CollectoryHubRestService {
      * @param uid
      * @return
      */
-    public Map getTempDataResourceFromCollectory(String uid) {
+    Map getTempDataResourceFromCollectory(String uid) {
         String url = "${grailsApplication.config.collectoryUrl}/tempDataResource?uid=${uid}"
         Map result = webService.get(url)
         if(result.statusCode in [200, 201]){
@@ -246,8 +246,8 @@ class CollectoryHubRestService {
         }
 
         // only add these links if plugin is used in sandbox environment.
-        if(grailsApplication.config.sandboxHubsWebapp){
-            tempMeta.sandboxLink = "${grailsApplication.config.sandboxHubsWebapp}/occurrences/search?q=data_resource_uid:${tempMeta.uid}"
+         if (grailsApplication.config.biocache.baseURL) {
+             tempMeta.sandboxLink = "${grailsApplication.config.biocache.baseURL}/occurrences/search?q=data_resource_uid:${tempMeta.uid}"
             tempMeta.sourceFileUrl = "${grailsApplication.config.grails.serverURL}/dataCheck/serveFile?uid=${tempMeta.uid}"
             tempMeta.reloadLink = "${grailsApplication.config.grails.serverURL}/tempDataResource/reload?uid=${tempMeta.uid}"
             tempMeta.deleteLink = "${grailsApplication.config.grails.serverURL}/datasets/deleteResource?uid=${tempMeta.uid}"
@@ -266,8 +266,8 @@ class CollectoryHubRestService {
      */
     String getDateAndTimeFromTimeStamp(String timestamp){
         Date date = new Date().parse("yyyy-MM-dd'T'HH:mm:ss", timestamp)
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
-        sdf.format(date);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss")
+        sdf.format(date)
     }
 
     /**
@@ -311,7 +311,7 @@ class CollectoryHubRestService {
      */
     Map getListOfTempDataResource(String userId, String max =10, String offset=0,  String status='',
         String sortField='lastUpdated', String sortOrder='desc') {
-        Map userUploads = getUserUploads(userId, grailsApplication.config.biocacheServiceUrl, max, offset,  status,
+        Map userUploads = getUserUploads(userId, grailsApplication.config.biocacheService.baseURL, max, offset, status,
                 sortField, sortOrder)
 
         userUploads.resources = userUploads.resources?.collect { dtr ->
@@ -360,7 +360,6 @@ class CollectoryHubRestService {
             } else {
                 valid = valid && false
                 inValidFields.push(field)
-//                inValidFields.push(messageSource.getMessage("tempDataResource.status.${field}", [], null))
             }
         }
 
@@ -436,7 +435,7 @@ class CollectoryHubRestService {
      * @param uid - drt id
      * @return
      */
-    public List createOrSaveDataResource(String uid) {
+    List createOrSaveDataResource(String uid) {
         if(isDataSubmittedForTempDataResource(uid)) {
             Map drt = grailsApplication.mainContext.collectoryHubRestService.getTempDataResource(uid)
             Map dr = convertTempDataResourceToDataResource(drt)
@@ -469,7 +468,7 @@ class CollectoryHubRestService {
      * @param dr - data resource fields
      * @return [ uid: dr1, status: 200, location: '/ws/dataResource/dr1' ]
      */
-    public Map createOrSaveDataResource(String uid, Map dr) {
+    Map createOrSaveDataResource(String uid, Map dr) {
         String url, drId
         if (!uid) {
             url = "${grailsApplication.config.collectoryUrl}/dataResource"
@@ -532,22 +531,22 @@ class CollectoryHubRestService {
             case 'CCBY3Aus':
                 dr.licenseType = 'CC BY'
                 dr.licenseVersion = "3.0"
-                break;
+                break
             case 'CCBYNC3Aus':
                 dr.licenseType = 'CC BY-NC-Aus'
                 dr.licenseVersion = "3.0"
-                break;
+                break
             case 'CCBY4Int':
                 dr.licenseType = 'CC BY-Int'
                 dr.licenseVersion = "4.0"
-                break;
+                break
             case 'CCBYNC4Int':
                 dr.licenseType = 'CC BY-NC-Int'
                 dr.licenseVersion = "4.0"
-                break;
+                break
             case 'CC0':
                 dr.licenseType = 'CC0'
-                break;
+                break
         }
 
         dr
@@ -590,7 +589,7 @@ class CollectoryHubRestService {
      * @param uid
      * @return
      */
-    public Map deleteDataResource(String uid){
+    Map deleteDataResource(String uid) {
         deleteAnEntity('dataResource', uid)
     }
 
@@ -599,7 +598,7 @@ class CollectoryHubRestService {
      * @param uid
      * @return
      */
-    public Map deleteTempDataResource(String uid){
+    Map deleteTempDataResource(String uid) {
         deleteAnEntity('tempDataResource', uid)
     }
 
@@ -608,7 +607,7 @@ class CollectoryHubRestService {
      * @param entity
      * @param uid
      */
-    public void deleteAnEntity(String entity, String uid) {
+    void deleteAnEntity(String entity, String uid) {
         String url = "${grailsApplication.config.collectoryUrl}/${entity}/${uid}"
         int statusCode = collectoryHubService.doDelete(url)
         [status: statusCode]
@@ -702,7 +701,7 @@ class CollectoryHubRestService {
      * @param contactId
      * @return
      */
-    public createOrUpdateContactForEntity(String entity, String uid, Integer contactId){
+    def createOrUpdateContactForEntity(String entity, String uid, Integer contactId) {
         String url = "${grailsApplication.config.collectoryUrl}/${entity}/${uid}/contacts/${contactId}"
         Map entityProps = [:]
         entityProps[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey

@@ -12,7 +12,7 @@ class CamelCaseTagLib {
     }
 
     def prettyCamel = { attr, body ->
-        def value = attr['value]']
+        def value = attr['value']
         out << formatService.prettyCamel(value)
     }
 }

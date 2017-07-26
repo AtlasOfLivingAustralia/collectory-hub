@@ -2,10 +2,13 @@
 <html xmlns="http://www.w3.org/1999/html">
 <head>
     <title>Chart options | ${grailsApplication.config.skin.appName} | ${grailsApplication.config.skin.orgNameLong}</title>
+    <meta name="breadcrumbs"
+          content="${grailsApplication.config.skin.appName ? grailsApplication.config.grails.serverURL + ',' + grailsApplication.config.skin.appName + '\\' : ''}${createLink(controller: 'tempDataResource', action: 'myData')},My datasets"/>
+    <meta name="breadcrumb" content="Chart options"/>
+
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="layout" content="${grailsApplication.config.skin.layout}" />
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css">
-    <script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <asset:stylesheet src="temp-style"/>
 </head>
 <body>
 <h1>${metadata.name} - Chart display options</h1>
@@ -62,11 +65,11 @@
 </div>
 </body>
 
-<r:script>
+<asset:script>
     $(function  () {
         $(".customIndexes").sortable();
         $( ".customIndexes" ).disableSelection();
     });
-</r:script>
+</asset:script>
 
 </html>

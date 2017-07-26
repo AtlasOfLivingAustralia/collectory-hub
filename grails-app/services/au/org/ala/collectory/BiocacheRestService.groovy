@@ -13,14 +13,14 @@ class BiocacheRestService {
 
     def getCustomIndexes(String uid){
         def http = new HttpClient()
-        def get = new GetMethod(grailsApplication.config.biocacheServiceUrl + "/upload/customIndexes/${uid}.json")
+        def get = new GetMethod(grailsApplication.config.biocacheService.baseURL + "/upload/customIndexes/${uid}.json")
         http.executeMethod(get)
         JSON.parse(get.getResponseBodyAsString())
     }
 
     def saveChartOptions(String uid, options){
         def http = new HttpClient()
-        def post = new PostMethod(grailsApplication.config.biocacheServiceUrl + "/upload/charts/${uid}")
+        def post = new PostMethod(grailsApplication.config.biocacheService.baseURL + "/upload/charts/${uid}")
         post.setRequestBody((options as JSON).toString())
         int status = http.executeMethod(post)
         status
@@ -28,7 +28,7 @@ class BiocacheRestService {
 
     def getChartOptions(String uid){
         def http = new HttpClient()
-        def get = new GetMethod(grailsApplication.config.biocacheServiceUrl + "/upload/charts/${uid}")
+        def get = new GetMethod(grailsApplication.config.biocacheService.baseURL + "/upload/charts/${uid}")
         http.executeMethod(get)
         JSON.parse(get.getResponseBodyAsString())
     }

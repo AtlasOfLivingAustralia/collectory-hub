@@ -18,7 +18,6 @@ package au.org.ala.collectory
 
 import au.org.ala.web.AlaSecured
 import au.org.ala.web.AuthService
-import au.org.ala.web.CASRoles
 import org.apache.commons.httpclient.util.URIUtil
 
 /**
@@ -33,35 +32,6 @@ class TempDataResourceController {
 
     BiocacheRestService biocacheRestService
     FormatService formatService
-
-    def beforeInterceptor = [action: this.&checkUserPrivilege]
-
-    BootstrapJs getBsVersion() {
-        BootstrapJs.valueOf(grailsApplication.config.bs.version ?: "bs2")
-    }
-
-    private Boolean checkUserPrivilege() {
-        if (params.uid) {
-            String alaId = authService.getUserId()
-            params.isAdmin = authService.userInRole(CASRoles.ROLE_ADMIN)
-
-            Map tempDataResource = collectoryHubRestService.getTempDataResource(params.uid)
-            if (tempDataResource) {
-                params.isOwner = alaId == tempDataResource.alaId
-                params.canEdit = params.canView = params.isOwner || params.isAdmin
-                params.canDelete = params.canSubmitForReview = (tempDataResource.status == 'draft') && params.isOwner
-                params.canCreateDataResource = params.canDecline = (tempDataResource.status == 'submitted') && params.isAdmin
-                params.canLoadToProduction = (tempDataResource.status in ['submitted', 'queuedForLoading']) && params.isAdmin
-                params.canReset = (tempDataResource.status != 'draft') && params.isAdmin
-                params.canTestRun = params.isAdmin && !!tempDataResource.prodUid
-                if ((tempDataResource.status in ['submitted', 'queuedForLoading']) && params.canEdit) {
-                    params.canEdit = false
-                }
-            }
-        }
-
-        return true
-    }
 
     /**
      * error page
@@ -88,14 +58,8 @@ class TempDataResourceController {
                 userUploads.currentUserId = currentUserId
                 userUploads.params = [max      : max, offset: offset, status: status, sortField: sortField, sortOrder: sortOrder]
                 userUploads.statuses = collectoryHubRestService.TEMP_DATA_RESROUCE_STATUSES
-                switch (bsVersion) {
-                    case BootstrapJs.bs2:
-                        render text: message(code: "bs2.notFoundMessage", default: "The system does not have a bootstrap 2 version of the requested page")
-                        break;
-                    case BootstrapJs.bs3:
-                        render view: 'myData', model: userUploads
-                        break;
-                }
+
+                render view: 'myData', model: userUploads
             } else {
                 login(createLink(action: 'myData', absolute: true))
             }
@@ -202,14 +166,8 @@ class TempDataResourceController {
             userUploads.currentUserId = currentUserId
             userUploads.params = [max      : max, offset: offset, status: status, sortField: sortField, sortOrder: sortOrder]
             userUploads.statuses = collectoryHubRestService.TEMP_DATA_RESROUCE_STATUSES
-            switch (bsVersion) {
-                case BootstrapJs.bs2:
-                    render text: message(code: "bs2.notFoundMessage", default: "The system does not have a bootstrap 2 version of the requested page")
-                    break;
-                case BootstrapJs.bs3:
-                    render view: 'adminList', model: userUploads
-                    break;
-            }
+
+            render view: 'adminList', model: userUploads
         } catch (Exception e) {
             log.error (e.message, e)
             flash.message = message(code: "tempDataResource.adminList.exception", default: "An error occurred while accessing all datasets list.")
@@ -229,14 +187,7 @@ class TempDataResourceController {
                 if (params.canEdit) {
                     Map metadata = collectoryHubRestService.getTempDataResource(params.uid)
                     if (metadata) {
-                        switch (bsVersion) {
-                            case BootstrapJs.bs2:
-                                render text: message(code: "bs2.notFoundMessage", default: "The system does not have a bootstrap 2 version of the requested page")
-                                break;
-                            case BootstrapJs.bs3:
-                                render view: 'editMetadata', model: metadata
-                                break;
-                        }
+                        render view: 'editMetadata', model: metadata
                     } else {
                         flash.message = message(code: "tempDataResource.drtNotFound", args: [params.uid], default: "Could not find dataset {0}.")
                         redirect(action: 'viewMetadata', params: [uid: params.uid])
@@ -279,14 +230,7 @@ class TempDataResourceController {
                         metadata.canTestRun = params.canTestRun
                         metadata.index = metadata.numberOfRecords <= 200000
 
-                        switch (bsVersion) {
-                            case BootstrapJs.bs2:
-                                render text: message(code: "bs2.notFoundMessage", default: "The system does not have a bootstrap 2 version of the requested page")
-                                break;
-                            case BootstrapJs.bs3:
-                                render view: 'viewMetadata', model: metadata
-                                break;
-                        }
+                        render view: 'viewMetadata', model: metadata
                     } else {
                         flash.message = message(code: "tempDataResource.drtNotFound", args: [params.uid], default: "Could not find dataset {0}.")
                         redirect action: 'myData'
@@ -336,14 +280,7 @@ class TempDataResourceController {
                         flash.message = message(code: "tempDataResource.saveTempDataResource.failed", args: [params.uid], default: "An error occurred when saving dataset {0}.")
                         // adds links and other metadata
                         collectoryHubRestService.preFillSystemDetails(params)
-                        switch (bsVersion) {
-                            case BootstrapJs.bs2:
-                                render text: message(code: "bs2.notFoundMessage", default: "The system does not have a bootstrap 2 version of the requested page")
-                                break;
-                            case BootstrapJs.bs3:
-                                render view: 'editMetadata', model: params
-                                break;
-                        }
+                        render view: 'editMetadata', model: params
                     }
                 } else {
                     flash.message = message(code: "tempDataResource.saveTempDataResource.noPrivilege", args: [params.uid], default: "You do not have privilege to edit dataset {0}")

@@ -114,11 +114,11 @@ class CollectoryHubService {
      * @return
      */
     Map doPost(String url, String body){
-        PostMethod post = new PostMethod(url);
-        post.setRequestHeader("Authorization", grailsApplication.config.webservice.apiKey);
-        post.setRequestBody(body);
-        HttpClient httpClient = new HttpClient();
-        int statusCode = httpClient.executeMethod(post);
+        PostMethod post = new PostMethod(url)
+        post.setRequestHeader("Authorization", grailsApplication.config.webservice.apiKey)
+        post.setRequestBody(body)
+        HttpClient httpClient = new HttpClient()
+        int statusCode = httpClient.executeMethod(post)
         [status: statusCode, location: post.getResponseHeader('location')?.value, resp: post.responseBodyAsString]
     }
 
@@ -138,7 +138,7 @@ class CollectoryHubService {
      * add api key and user email for authorisation and audit activities in collectory
      * @param body
      */
-    public void addAuthorisationFields(Map body) {
+    void addAuthorisationFields(Map body) {
         body[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
         body[USER_HEADER] = authService.getEmail()
         body
@@ -149,10 +149,10 @@ class CollectoryHubService {
      * @param url
      * @return
      */
-    public Map doHead(String url) {
-        HeadMethod head = new HeadMethod(url);
-        HttpClient httpClient = new HttpClient();
-        int statusCode = httpClient.executeMethod(head);
+    Map doHead(String url) {
+        HeadMethod head = new HeadMethod(url)
+        HttpClient httpClient = new HttpClient()
+        int statusCode = httpClient.executeMethod(head)
         [status: statusCode]
     }
 
@@ -161,10 +161,10 @@ class CollectoryHubService {
      * @param url
      * @return
      */
-    public int doDelete(String url) {
-        DeleteMethod delete = new DeleteMethod(url);
-        HttpClient httpClient = new HttpClient();
-        httpClient.executeMethod(delete);
+    int doDelete(String url) {
+        DeleteMethod delete = new DeleteMethod(url)
+        HttpClient httpClient = new HttpClient()
+        httpClient.executeMethod(delete)
     }
 
     /**
@@ -172,11 +172,11 @@ class CollectoryHubService {
      * @param url
      * @return
      */
-    public Map doGet(String url){
+    Map doGet(String url) {
         Map result = [:]
-        GetMethod get = new GetMethod(url);
-        HttpClient httpClient = new HttpClient();
-        result.status = httpClient.executeMethod(get);
+        GetMethod get = new GetMethod(url)
+        HttpClient httpClient = new HttpClient()
+        result.status = httpClient.executeMethod(get)
         result.headers = get.getResponseHeaders()
         result.resp = get.responseBodyAsString
 

@@ -20,17 +20,17 @@
 <html xmlns="http://www.w3.org/1999/html">
 <head>
     <title>All datasets | ${grailsApplication.config.skin.appName} | ${grailsApplication.config.skin.orgNameLong}</title>
+    <meta name="breadcrumbs"
+          content="${grailsApplication.config.skin.appName ? grailsApplication.config.grails.serverURL + ',' + grailsApplication.config.skin.appName : ''}"/>
+    <meta name="breadcrumb" content="All datasets"/>
+
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
-    <r:require modules="commonStyles"></r:require>
+    <asset:stylesheet src="temp-style"/>
     <g:set var="statusMessage" value="${message(code: "tempDataResource.status.${params.status}")}" />
 </head>
 
 <body>
-<ol class="breadcrumb">
-    <li><a href="${createLink(uri: '/')}">Home</a></li>
-    <li class="active">All datasets</li>
-</ol>
 <div class="panel panel-default">
     <div class="panel-heading">
         <h1>${grailsApplication.config.skin.appName} - Admin list</h1>
@@ -75,7 +75,7 @@
                                     </g:link>
 
                                     <a class="btn btn-default"
-                                       href="${userUpload.uiUrl ?: grailsApplication.config.sandboxHubsWebapp}/occurrences/search?q=data_resource_uid:${userUpload.uid}"><i
+                                       href="${userUpload.uiUrl ?: grailsApplication.config.biocache.baseURL}/occurrences/search?q=data_resource_uid:${userUpload.uid}"><i
                                             class="icon-th-list"></i> View records</a>
 
                                     <g:if test="${!grailsApplication.config.sandbox.hideCharts.toBoolean()}">

@@ -22,14 +22,19 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <title>${grailsApplication.config.skin.orgNameLong}</title>
-    <r:require modules="collectory"></r:require>
-    <r:require modules="jquery_json, bbq, rotate, jquery_tools, pagination, bootstrapSwitch, datasets"/>
+
     <g:set var="defaultSource" value="hub"></g:set>
+
+    <meta name="deferred-js" content=""/>
+
+    <asset:stylesheet src="collectory-hub"/>
+    <asset:javascript src="head"/>
+    <asset:javascript src="jquery-extensions"/>
+
     <script type="text/javascript">
         var altMap = true, hubSource = "${defaultSource}";
         $(document).ready(function() {
-//            $('#nav-tabs > ul').tabs();
-            loadResources("${grailsApplication.config.grails.serverURL}","${grailsApplication.config.contextPath}","${grailsApplication.config.grails.serverURL}", '${defaultSource}');
+            loadResources("${grailsApplication.config.grails.serverURL}", '${defaultSource}');
             $('select#per-page').change(onPageSizeChange);
             $('select#sort').change(onSortChange);
             $('select#dir').change(onDirChange);
@@ -49,15 +54,18 @@
                     if (!state) {
                         // hub visible
                         hubSource = 'hub'
-                        loadResources("${grailsApplication.config.grails.serverURL}","${grailsApplication.config.biocache.url}","${grailsApplication.config.collections.baseUrl}", 'hub')
+                        loadResources("${grailsApplication.config.grails.serverURL}", 'hub')
                     } else {
                         hubSource = 'all'
-                        loadResources("${grailsApplication.config.grails.serverURL}","${grailsApplication.config.biocache.url}","${grailsApplication.config.collections.baseUrl}", 'all')
+                        loadResources("${grailsApplication.config.grails.serverURL}", 'all')
                     }
                 }
             });
         });
     </script>
+
+    <asset:javascript src="collectory-hub"/>
+
 </head>
 
 <body id="page-datasets" class="nav-datasets">
@@ -81,8 +89,8 @@
         </div>
     </noscript>
 
-    <div class="collectory-content row-fluid">
-        <div id="sidebarBoxXXX" class="span3 facets well well-small">
+    <div class="collectory-content row">
+        <div id="sidebarBoxXXX" class="col-sm-3 facets well well-small">
             <div class="sidebar-header">
                 <h3><g:message code="public.datasets.sidebar.header" /></h3>
             </div>
@@ -94,9 +102,9 @@
             </div>
         </div>
 
-        <div id="data-set-list" class="span9">
+        <div id="data-set-list" class="col-sm-9">
             <div class="well">
-                <div class="row-fluid">
+                <div class="row">
                     <div class="pull-left">
                         <span id="resultsReturned"><g:message code="public.datasets.resultsreturned.message01" /> <strong></strong>&nbsp;<g:message code="public.datasets.resultsreturned.message02" />.</span>
                         <div class="input-append">
@@ -110,25 +118,21 @@
                             <g:message code="button.toggle.label" default="All / Hub datasets" /> <input type="checkbox" name="hub-toggle" id="hub-toggle" ${ defaultSource == 'hub' ? '':'checked'}/>
                         </div>
                     </div>
-                    %{--<div class="pull-right">--}%
-                        %{--<a href="#" id="downloadLink" class="btn"--}%
-                           %{--title="Download metadata for datasets as a CSV file">--}%
-                            %{--<i class="icon-download"></i>--}%
-                            %{--<g:message code="public.datasets.downloadlink.label" /></a>--}%
-                    %{--</div>--}%
                 </div>
                 <hr/>
                 <div id="searchControls">
-                    <div id="sortWidgets" class="row-fluid">
-                        <div class="span4">
+                    <div id="sortWidgets" class="row">
+                        <div class="col-sm-4">
                             <label for="per-page"><g:message code="public.datasets.sortwidgets.rpp" /></label>
                             <g:select id="per-page" name="per-page" from="${[10,20,50,100,500]}" value="${pageSize ?: 20}"/>
                         </div>
-                        <div class="span4">
+
+                        <div class="col-sm-4">
                             <label for="sort"><g:message code="public.datasets.sortwidgets.sb" /></label>
                             <g:select id="sort" name="sort" from="${['name','type','license']}"/>
                         </div>
-                        <div class="span4">
+
+                        <div class="col-sm-4">
                             <label for="dir"><g:message code="public.datasets.sortwidgets.so" /></label>
                             <g:select id="dir" name="dir" from="${['ascending','descending']}"/>
                         </div>

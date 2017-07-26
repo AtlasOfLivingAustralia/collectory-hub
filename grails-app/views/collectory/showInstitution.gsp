@@ -20,11 +20,16 @@
 <head>
     <g:set var="collectoryService" bean="collectoryHubService"></g:set>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="breadcrumb" content="${instance.name}"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
     <title><ch:pageTitle>${instance.name}</ch:pageTitle></title>
+
     <script type="text/javascript" language="javascript" src="http://www.google.com/jsapi"></script>
-    <r:require modules="jquery, fancybox, jquery_jsonp, charts, collectory, commonStyles"/>
-    <r:script type="text/javascript" disposition="head">
+
+    <asset:stylesheet src="collectory-hub"/>
+    <asset:javascript src="collectory-hub"/>
+
+    <asset:script type="text/javascript" disposition="head">
       biocacheServicesUrl = "${grailsApplication.config.biocacheServicesUrl}";
       biocacheWebappUrl = "${grailsApplication.config.grails.serverURL}";
       loadLoggerStats = ${!grailsApplication.config.disableLoggerLinks.toBoolean()};
@@ -45,14 +50,14 @@
             'width': 300
         });
       });
-    </r:script>
+    </asset:script>
 </head>
 
 <body>
 <div id="content">
     <div id="header" class="collectory">
-        <div class="row-fluid">
-            <div class="span8">
+        <div class="row">
+            <div class="col-sm-8">
                 <h1>${instance.name}</h1>
                 <g:set var="parents" value="${instance.parentInstitutions}"/>
                 <g:each var="p" in="${parents}">
@@ -62,7 +67,7 @@
                         class="acronym">Acronym: ${instance.acronym}</span></ch:valueOrOtherwise>
             </div>
 
-            <div class="span4">
+            <div class="col-sm-4">
                 <g:if test="${instance.logoRef && instance.logoRef.uri}">
                     <img class="institutionImage"
                          src='${instance.logoRef.uri}'/>
@@ -70,8 +75,8 @@
             </div>
         </div>
     </div><!--close header-->
-    <div class="row-fluid">
-            <div class="span8">
+    <div class="row">
+        <div class="col-sm-8">
                 <g:if test="${instance.pubDescription}">
                     <h2><g:message code="public.des" /></h2>
                     <ch:formattedText>${instance.pubDescription}</ch:formattedText>
@@ -126,7 +131,7 @@
                 <ch:lastUpdated date="${instance.lastUpdated}"/>
 
             </div><!--close section-->
-            <div class="span4">
+        <div class="col-sm-4">
                 <g:if test="${instance.imageRef && instance.imageRef.file}">
                     <div class="section">
                         <img alt="${instance.imageRef.file}"
@@ -183,7 +188,7 @@
             </div>
         </div><!--close content-->
 </div>
-<r:script type="text/javascript">
+<asset:script type="text/javascript">
       // configure the charts
       var facetChartOptions = {
           /* base url of the collectory */
@@ -220,7 +225,7 @@
 
       // stats
       if(loadLoggerStats){
-        loadDownloadStats("${grailsApplication.config.loggerURL}", "${instance.uid}","${instance.name}", "1002");
+        loadDownloadStats("${grailsApplication.config.logger.baseURL}", "${instance.uid}","${instance.name}", "1002");
       }
 
       // records
@@ -264,6 +269,6 @@
     google.load("visualization", "1", {packages:["corechart"]});
     google.setOnLoadCallback(onLoadCallback);
 
-</r:script>
+</asset:script>
 </body>
 </html>

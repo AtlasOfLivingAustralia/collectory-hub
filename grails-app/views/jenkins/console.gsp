@@ -20,26 +20,29 @@
 <html>
 <head>
     <title>Console | ${grailsApplication.config.skin.appName} | ${grailsApplication.config.skin.orgNameLong}</title>
+
+    <meta name="breadcrumbs"
+          content="${createLink(controller: 'tempDataResource', action: 'adminList')},All Datasets\\${createLink(controller: 'tempDataResource', action: 'viewMetadata', params:[uid: uid])},Metadata"/>
+    <meta name="breadcrumb" content="Console"/>
+
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
-    <r:require modules="commonStyles, console"></r:require>
+
+    <asset:stylesheet src="collectory-hub"/>
+    <asset:javascript src="collectory-hub"/>
+    <asset:javascript src="console"/>
 </head>
 
 <body>
-<ol class="breadcrumb">
-    <li><a href="${createLink(uri: '/')}">Home</a></li>
-    <li><a href="${createLink(controller: 'tempDataResource', action: 'adminList')}">Datasets</a></li>
-    <li><a href="${createLink(controller: 'tempDataResource', action: 'viewMetadata', params:[uid: uid])}">Dataset</a></li>
-    <li class="active">Jenkins console</li>
-</ol>
 
 <div class="panel console-top">
     <div class="panel-body console console-height">
         <div id="console-content">
             <a class="pull-right btn btn-default btn-sm console-follow" id="follow" href="#" onclick="">Follow log</a>
-            <pre id="console-output" class="borderless console" ><g:if test="${text}">${text}</g:if></pre>
-            <div id="last-line">
-            </div>
+            <pre id="console-output" class="borderless console"><g:if test="${text}">${text}</g:if></pre>
+
+            <div id="last-line"></div>
+
             <div class="row hide" id="console-loading">
                 <div class="col-sm-12">
                     <i class="fa fa-cog fa-2x fa-spin"><span class="sr-only">Loading...</span></i>
@@ -49,7 +52,7 @@
         </div>
     </div>
 </div>
-%{--<g:if test="${isMoreData}">--}%
+
 <script>
     var url = "${createLink(controller: 'jenkins', action:  'console')}/${jobName}/${buildNumber}/",
         nextStart = ${nextStart},
@@ -65,6 +68,6 @@
         $('#follow').on('click', setFollow)
     })
 </script>
-%{--</g:if>--}%
+
 </body>
 </html>

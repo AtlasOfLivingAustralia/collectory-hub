@@ -22,8 +22,9 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
+    <meta name="breadcrumb" content="${instance.name}"/>
     <title><ch:pageTitle>${instance.name}</ch:pageTitle></title>
-    <r:script disposition="head">
+    <asset:script>
         var COLLECTORY_CONF = { contextPath: "${grailsApplication.config.contextPath}", locale: "" }
         // define biocache server
         bieUrl = "${grailsApplication.config.bie.baseURL}";
@@ -44,15 +45,16 @@
                 'width': 300
             });
         });
-    </r:script>
-    <r:require modules="collectory, commonStyles"></r:require>
-    <r:require modules="jquery, fancybox, jquery_jsonp, jstree, jquery_ui_custom, charts, datadumper"/>
+    </asset:script>
+
+    <asset:stylesheet src="collectory-hub"/>
+    <asset:javascript src="collectory-hub"/>
 </head>
 <body class="nav-datasets">
 <div id="content">
 <div id="header">
-    <div class="row-fluid">
-        <div class="span8">
+    <div class="row">
+        <div class="col-sm-8">
             <h1>${instance.name}</h1>
             <g:set var="dp" value="${instance.dataProvider}"/>
             <g:if test="${dp}">
@@ -72,14 +74,12 @@
                     <b><a class="external_icon" href="http://lsids.sourceforge.net/"
                           target="_blank"><g:message code="public.lsidtext.link" />:</a></b>
 
-                    %{--<p><ch:guid target="_blank" guid='${instance.guid}'/></p>--}%
-
                     <p><g:message code="public.lsidtext.des" />.</p>
                 </div>
             </div>
         </div>
 
-        <div class="span4">
+        <div class="col-sm-4">
             <g:if test="${dp?.logoRef?.file}">
                 <g:link action="show" id="${dp.uid}">
                     <img class="institutionImage"
@@ -93,8 +93,8 @@
         </div>
     </div>
 </div><!--close header-->
-<div class="row-fluid">
-    <div class="span8">
+<div class="row">
+    <div class="col-sm-8">
         <g:if test="${instance.pubDescription || instance.techDescription || instance.focus}">
             <h2><g:message code="public.des" /></h2>
         </g:if>
@@ -153,8 +153,6 @@
             <h2><g:message code="public.sdr.content.label08" /></h2>
 
             <p>
-                %{--<ch:lastChecked date="${instance.lastChecked}"/>--}%
-                %{--<ch:dataCurrency date="${instance.dataCurrency}"/></p>--}%
         </g:if>
 
         <g:if test="${!grailsApplication.config.disableLoggerLinks.toBoolean() && (instance.resourceType == 'website' || instance.resourceType == 'records')}">
@@ -176,11 +174,7 @@
             <div>
                 <p><span
                         id="numBiocacheRecords"><g:message code="public.sdr.content.des04" /></span> <g:message code="public.sdr.content.des05" />.
-                %{--<ch:lastChecked date="${instance.lastChecked}"/>--}%
-                %{--<ch:dataCurrency date="${instance.dataCurrency}"/>--}%
                 </p>
-                %{--<ch:recordsLink--}%
-                        %{--collection="${instance}"><g:message code="public.sdr.content.link01" /> ${instance.name} <g:message code="public.sdr.content.link02" />.</ch:recordsLink>--}%
                 <ch:downloadPublicArchive uid="${instance.uid}" available="${instance.publicArchiveAvailable}"/>
             </div>
         </g:if>
@@ -196,7 +190,7 @@
         </g:if>
         <ch:lastUpdated date="${instance.lastUpdated}"/>
     </div><!--close column-one-->
-    <div class="span4">
+    <div class="col-sm-4">
         <g:if test="${instance.imageRef && instance.imageRef.file}">
             <div class="section">
                 <img alt="${instance.imageRef?.file}"
@@ -251,7 +245,7 @@
                 <h3><g:message code="public.sdr.content.label12" /></h3>
                 <div class="webSite">
                     <a class='external_icon' target="_blank"
-                       href="${grailsApplication.config.speciesListToolUrl}${instance.uid}"><g:message code="public.sdr.content.link03" /></a>
+                       href="${grailsApplication.config.speciesList.baseURL}/speciesListItem/list/${instance.uid}"><g:message code="public.sdr.content.link03" /></a>
                 </div>
             </div>
         </g:if>
@@ -264,19 +258,6 @@
                 </div>
             </div>
         </g:elseif>
-
-    <!-- attribution -->
-        %{--<g:set var='attribs' value='${instance.getAttributionList()}'/>--}%
-        %{--<g:if test="${attribs.size() > 0}">--}%
-            %{--<div class="section" id="infoSourceList">--}%
-                %{--<h4><g:message code="public.sdr.infosourcelist.title" /></h4>--}%
-                %{--<ul>--}%
-                    %{--<g:each var="a" in="${attribs}">--}%
-                        %{--<li><a href="${a.url}" class="external" target="_blank">${a.name}</a></li>--}%
-                    %{--</g:each>--}%
-                %{--</ul>--}%
-            %{--</div>--}%
-        %{--</g:if>--}%
     </div>
 </div>
 </div>
@@ -284,8 +265,8 @@
 <script type="text/javascript">google.load('visualization', '1.0', {'packages':['corechart']});</script>
 <script type="text/javascript">
      var CHARTS_CONFIG = {
-         biocacheServicesUrl: "${grailsApplication.config.biocacheServicesUrl}",
-         biocacheWebappUrl: "${grailsApplication.config.grails.serverURL}",
+         biocacheServicesUrl: "${grailsApplication.config.biocacheService.baseURL}",
+         biocacheWebappUrl: "${grailsApplication.config.biocache.baseURL}",
          collectionsUrl: "${grailsApplication.config.grails.serverURL}"
      };
 
@@ -367,9 +348,9 @@
       // stats
       if(loadLoggerStats){
           if (${instance.resourceType == 'website'}) {
-              loadDownloadStats("${grailsApplication.config.loggerURL}", "${instance.uid}","${instance.name}", "2000");
+              loadDownloadStats("${grailsApplication.config.logger.baseURL}", "${instance.uid}","${instance.name}", "2000");
           } else if (${instance.resourceType == 'records'}) {
-              loadDownloadStats("${grailsApplication.config.loggerURL}", "${instance.uid}","${instance.name}", "1002");
+              loadDownloadStats("${grailsApplication.config.logger.baseURL}", "${instance.uid}","${instance.name}", "1002");
           }
       }
 

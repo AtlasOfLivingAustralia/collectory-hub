@@ -20,17 +20,15 @@
 <html>
 <head>
     <title>Metadata | ${grailsApplication.config.skin.appName} | ${grailsApplication.config.skin.orgNameLong}</title>
+    <meta name="breadcrumbs"
+          content="${grailsApplication.config.skin.appName ? grailsApplication.config.grails.serverURL + ',' + grailsApplication.config.skin.appName + '\\' : ''}${createLink(controller: 'tempDataResource', action: 'myData')},My datasets"/>
+    <meta name="breadcrumb" content="Metadata"/>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <meta name="layout" content="${grailsApplication.config.skin.layout}"/>
-    <r:require modules="commonStyles"></r:require>
+    <asset:stylesheet src="temp-style"/>
 </head>
 
 <body>
-<ol class="breadcrumb">
-    <li><a href="${createLink(uri: '/')}">Home</a></li>
-    <li><a href="${createLink(controller: 'tempDataResource', action: 'myData',)}">My datasets</a></li>
-    <li class="active">Dataset</li>
-</ol>
 
 <div class="panel panel-default">
     <div class="panel-heading">
