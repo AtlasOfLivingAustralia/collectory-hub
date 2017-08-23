@@ -190,7 +190,7 @@ class CollectoryHubRestService {
      */
     Map getUserUploads(String currentUserId, String webserviceUrl = '', String max =10, String offset=0,  String status='',
                        String sortField='lastUpdated', String sortOrder='desc'){
-        def url = "${grailsApplication.config.collectoryUrl}/tempDataResource?alaId=${currentUserId}" +
+        def url = "${grailsApplication.config.collectory.baseURL}/ws/tempDataResource?alaId=${currentUserId}" +
                 "&webserviceUrl=${URIUtil.encodeWithinQuery(webserviceUrl)}&max=${max}&offset=${offset}&status=${status}&sortField=${sortField}" +
                 "&sortOrder=${sortOrder}"
         Map result = webService.get(url)
@@ -223,7 +223,7 @@ class CollectoryHubRestService {
      * @return
      */
     Map getTempDataResourceFromCollectory(String uid) {
-        String url = "${grailsApplication.config.collectoryUrl}/tempDataResource?uid=${uid}"
+        String url = "${grailsApplication.config.collectory.baseURL}/ws/tempDataResource?uid=${uid}"
         Map result = webService.get(url)
         if(result.statusCode in [200, 201]){
             result.resp
@@ -289,7 +289,7 @@ class CollectoryHubRestService {
     @CacheEvict(value="collectoryCache", key= "#uid", beforeInvocation = true)
     Map saveTempDataResource(Map data, String uid){
         if(uid){
-            String url = "${grailsApplication.config.collectoryUrl}/tempDataResource/${uid}"
+            String url = "${grailsApplication.config.collectory.baseURL}/ws/tempDataResource/${uid}"
             data[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
             data.sourceFile = "${grailsApplication.config.grails.serverURL}/dataCheck/serveFile?uid=${uid}"
             data.remove('controller')
@@ -471,9 +471,9 @@ class CollectoryHubRestService {
     Map createOrSaveDataResource(String uid, Map dr) {
         String url, drId
         if (!uid) {
-            url = "${grailsApplication.config.collectoryUrl}/dataResource"
+            url = "${grailsApplication.config.collectory.baseURL}/ws/dataResource"
         } else {
-            url = "${grailsApplication.config.collectoryUrl}/dataResource/${uid}"
+            url = "${grailsApplication.config.collectory.baseURL}/ws/dataResource/${uid}"
         }
 
         dr[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
@@ -608,7 +608,7 @@ class CollectoryHubRestService {
      * @param uid
      */
     void deleteAnEntity(String entity, String uid) {
-        String url = "${grailsApplication.config.collectoryUrl}/${entity}/${uid}"
+        String url = "${grailsApplication.config.collectory.baseURL}/ws/${entity}/${uid}"
         int statusCode = collectoryHubService.doDelete(url)
         [status: statusCode]
     }
@@ -667,7 +667,7 @@ class CollectoryHubRestService {
      * @return
      */
     Map getContact(String email){
-        String url = "${grailsApplication.config.collectoryUrl}/contacts/email/${email}"
+        String url = "${grailsApplication.config.collectory.baseURL}/ws/contacts/email/${email}"
         Map result = webService.get(url)
         if (result.statusCode in [200,201]) {
             return result.resp
@@ -685,7 +685,7 @@ class CollectoryHubRestService {
      * @return
      */
     Map createContact(Map props){
-        String url = "${grailsApplication.config.collectoryUrl}/contacts/"
+        String url = "${grailsApplication.config.collectory.baseURL}/ws/contacts/"
         Map result = collectoryHubService.doPost(url, props)
         if(result.status in [200, 201]){
             return  JSON.parse(result.resp)
@@ -702,7 +702,7 @@ class CollectoryHubRestService {
      * @return
      */
     def createOrUpdateContactForEntity(String entity, String uid, Integer contactId) {
-        String url = "${grailsApplication.config.collectoryUrl}/${entity}/${uid}/contacts/${contactId}"
+        String url = "${grailsApplication.config.collectory.baseURL}/ws/${entity}/${uid}/contacts/${contactId}"
         Map entityProps = [:]
         entityProps[DEFAULT_API_KEY_HEADER] = grailsApplication.config.webservice.apiKey
         entityProps[USER_HEADER] = authService.getEmail()
