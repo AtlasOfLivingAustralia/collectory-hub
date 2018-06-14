@@ -47,9 +47,9 @@ dependencies {
     testRuntime "org.seleniumhq.selenium:selenium-htmlunit-driver:2.47.1"
     testRuntime "net.sourceforge.htmlunit:htmlunit:2.18"
 
-    compile "org.grails.plugins:ala-ws-plugin:2.0-SNAPSHOT"
-    compile "org.grails.plugins:ala-auth:3.0.0-SNAPSHOT"
-    runtime "org.grails.plugins:ala-bootstrap3:3.0.0-SNAPSHOT"
+    compile "org.grails.plugins:ala-ws-plugin:2.0"
+    compile "org.grails.plugins:ala-auth:3.0.3"
+    runtime "org.grails.plugins:ala-bootstrap3:3.0.0"
 
 //    compile "org.grails.plugins:jquery:1.11.1"
 
