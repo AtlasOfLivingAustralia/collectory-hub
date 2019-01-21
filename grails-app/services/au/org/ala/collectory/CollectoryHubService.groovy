@@ -111,11 +111,13 @@ class CollectoryHubService {
      * Do a post with JSON body
      * @param url
      * @param body - JSON string
+     * @param headers Additional headers (Authorization is provided via grails confioguration webservice.apiKey)
      * @return
      */
-    Map doPost(String url, String body){
+    Map doPost(String url, String body, Map headers = [:]){
         PostMethod post = new PostMethod(url)
         post.setRequestHeader("Authorization", grailsApplication.config.webservice.apiKey)
+        headers.each { k, v -> post.setRequestHeader(k, v) }
         post.setRequestBody(body)
         HttpClient httpClient = new HttpClient()
         int statusCode = httpClient.executeMethod(post)
@@ -170,16 +172,17 @@ class CollectoryHubService {
     /**
      * Do a get request. This method returns headers as well.
      * @param url
+     * @param headers Additional headers
      * @return
      */
-    Map doGet(String url) {
+    Map doGet(String url, Map headers = [:]) {
         Map result = [:]
         GetMethod get = new GetMethod(url)
+        headers.each { k, v -> get.setRequestHeader(k, v) }
         HttpClient httpClient = new HttpClient()
         result.status = httpClient.executeMethod(get)
         result.headers = get.getResponseHeaders()
         result.resp = get.responseBodyAsString
-
         result
     }
 }

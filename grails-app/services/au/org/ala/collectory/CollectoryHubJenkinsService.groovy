@@ -17,6 +17,8 @@
 package au.org.ala.collectory
 
 import au.org.ala.ws.service.WebService
+import groovy.json.JsonSlurper
+import org.apache.commons.httpclient.HttpStatus
 
 import javax.annotation.PostConstruct
 
@@ -34,6 +36,33 @@ class CollectoryHubJenkinsService {
     }
 
     /**
+     * Get an optional crumb from the jenkins server for authentication.
+     *
+     * @return A map of headers to add to the jenkins request
+     */
+    protected Map getCrumb() {
+        def headers = [:]
+        if (grailsApplication.config.jenkins.useCrumb?.toBoolean()) {
+            String url = "${grailsApplication.config.jenkins.url}/crumbIssuer/api/json"
+            def cr = collectoryHubService.doGet(url)
+            if (cr.status != HttpStatus.SC_OK) {
+                log.error("Unable to get crumb for jenkins job from ${url}, response=${cr}")
+                throw new Exception("Unable to get crumb for jenkins job")
+            }
+            def resp = new JsonSlurper().parseText(cr.resp)
+            def crumb = resp.crumb
+            def header = resp.crumbRequestField
+            if (crumb && header)
+                headers[header] = crumb
+            else {
+                log.warn("Unable to get crumb/header from ${url}, response ${cr}")
+                throw new Exception("Unable to get crumb for jenkins job")
+            }
+        }
+        return headers
+    }
+
+    /**
      * Submit a parameterized job to jenkins.
      * @param jobName - parameterized job name
      * @param uid - drt number
@@ -41,10 +70,13 @@ class CollectoryHubJenkinsService {
      * @return
      */
     public Map submitParameterizedJob(String jobName, String uid, String dr){
+        def headers = getCrumb()
+        // Jenkins doesn't like + encoded spaces in URLs
+        jobName = URLEncoder.encode(jobName, "UTF-8").replaceAll('\\+', '%20')
         String url = "${grailsApplication.config.jenkins.url}/job/${jobName}/buildWithParameters?" +
                 "token=${grailsApplication.config.jenkins.token}&apikey=${grailsApplication.config.webservice.apiKey}" +
-                "&uid=${uid}&dr=${dr}&collectory=${grailsApplication.config.collectory.baseUrl}"
-        collectoryHubService.doPost(url,"")
+                "&uid=${uid}&dr=${dr}&collectory=${grailsApplication.config.collectory.baseURL}"
+        collectoryHubService.doPost(url,"", headers)
     }
 
     /**
@@ -87,8 +119,11 @@ class CollectoryHubJenkinsService {
      * @return
      */
     public Map consoleMessage(String jobName, String buildNumber, String start){
-        String url = "${grailsApplication.config.jenkins.url}/job/${jobName}/${buildNumber}/logText/progressiveText?start=${start}"
-        Map result = collectoryHubService.doGet(url)
+        def headers = getCrumb()
+        // Jenkins doesn't like + encoded spaces in URLs
+        encJobName = URLEncoder.encode(jobName, "UTF-8").replaceAll('\\+', '%20')
+        String url = "${grailsApplication.config.jenkins.url}/job/${encJobName}/${buildNumber}/logText/progressiveText?start=${start}"
+        Map result = collectoryHubService.doGet(url, headers)
         Map msg = [
                 jobName: jobName,
                 buildNumber: buildNumber,

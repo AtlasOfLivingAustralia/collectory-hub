@@ -252,7 +252,7 @@ class CollectoryHubRestService {
             tempMeta.reloadLink = "${grailsApplication.config.grails.serverURL}/tempDataResource/reload?uid=${tempMeta.uid}"
             tempMeta.deleteLink = "${grailsApplication.config.grails.serverURL}/datasets/deleteResource?uid=${tempMeta.uid}"
             if(tempMeta.prodUid){
-                tempMeta.collectoryLink = "${grailsApplication.config.collectory.baseUrl}/public/show/${tempMeta.prodUid}"
+                tempMeta.collectoryLink = "${grailsApplication.config.collectory.baseURL}/public/show/${tempMeta.prodUid}"
             }
         }
 
