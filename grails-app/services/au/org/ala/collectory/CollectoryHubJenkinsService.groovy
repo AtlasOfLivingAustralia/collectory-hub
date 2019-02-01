@@ -121,12 +121,14 @@ class CollectoryHubJenkinsService {
     public Map consoleMessage(String jobName, String buildNumber, String start){
         def headers = getCrumb()
         // Jenkins doesn't like + encoded spaces in URLs
-        encJobName = URLEncoder.encode(jobName, "UTF-8").replaceAll('\\+', '%20')
-        String url = "${grailsApplication.config.jenkins.url}/job/${encJobName}/${buildNumber}/logText/progressiveText?start=${start}"
+        def encJobName = URLEncoder.encode(jobName, "UTF-8").replaceAll('\\+', '%20')
+        String jobUrl = "${grailsApplication.config.jenkins.url}/job/${encJobName}/${buildNumber}"
+        String url = "${jobUrl}/logText/progressiveText?start=${start}"
         Map result = collectoryHubService.doGet(url, headers)
         Map msg = [
                 jobName: jobName,
                 buildNumber: buildNumber,
+                jobUrl: jobUrl,
                 start: start,
                 isMoreData : false
         ]
@@ -143,7 +145,6 @@ class CollectoryHubJenkinsService {
                     break;
             }
         }
-
         msg
     }
 
