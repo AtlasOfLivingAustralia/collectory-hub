@@ -27,6 +27,8 @@ class JenkinsController {
     def console() {
         if(params.id && params.jobName){
             Map result = collectoryHubJenkinsService.consoleMessage(params.jobName, params.id, params.start)
+            if (result.isMoreData && result.nextStart)
+                result.next = createLink(absolute: true, controller: "jenkins", action: 'console', params: [id: params.id, jobName: params.jobName, start: result.nextStart])
             result.uid = params.uid2
             render text: result as JSON
         } else {
