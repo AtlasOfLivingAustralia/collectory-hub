@@ -1,4 +1,4 @@
-> **_NOTE:_** Please note that this repo is no longer in user - please refer to [collecotry](https://github.com/AtlasOfLivingAustralia/collectory) instead.
+> **_NOTE:_** Please note that this repo is no longer in use - please refer to [collecotry](https://github.com/AtlasOfLivingAustralia/collectory) instead.
 # collectory-hub [![Build Status](https://travis-ci.org/AtlasOfLivingAustralia/collectory-hub.svg?branch=master)](https://travis-ci.org/AtlasOfLivingAustralia/collectory-hub)
 
 **collectory-hub** plugin provides a web UI for a back-end service called [**collectory**](https://github.com/AtlasOfLivingAustralia/collectory-plugin). It aims to replicate the service hub architecture used by many applications in ALA. For example, biocache hub has three components - biocache-service, biocache-hub and ala-hub. Biocache-service handles webservices, biocahe-hub plugin contains all web pages of the application and ala-hub is the front end which uses the necessary pages of biocahe-hub and overides pages.
